@@ -1,0 +1,32 @@
+.DS_Store
+
+# Runtime / local env
+.env
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# Python packaging / build
+*.egg-info/
+dist/
+build/
+
+# Local databases and locks
+*.db
+*.sqlite
+*.sqlite3
+*.lock
+
+# Backend runtime data
+backend/data/
+!backend/data/.gitkeep
+backend/workspace/memory/*.md
+!backend/workspace/memory/.gitkeep
+
+# Docker runtime state
+docker_data/
+
+# Logs
+*.log

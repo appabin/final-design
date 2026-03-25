@@ -1,0 +1,13 @@
+.DS_Store
+.sisyphus/
+open-notebook
+study-plan/
+venv311/
+
+# Nested project runtime and generated artifacts
+hachi_mvp/docker_data/
+hachi_mvp/backend/data/
+hachi_mvp/backend/hachi_mvp_backend.egg-info/
+hachi_mvp/backend/workspace/memory/*.md
+!hachi_mvp/backend/workspace/memory/.gitkeep
+hachi_mvp/backend/.env

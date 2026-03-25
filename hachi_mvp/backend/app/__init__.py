@@ -1,0 +1,1 @@
+"""Hachi MVP backend package."""

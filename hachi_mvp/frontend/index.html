@@ -1,0 +1,1187 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hachi Assistant Studio</title>
+  <style>
+    :root {
+      --bg: #eef1f6;
+      --panel: rgba(255, 255, 255, 0.88);
+      --panel-strong: #ffffff;
+      --line: #d8deea;
+      --ink: #1a2238;
+      --muted: #5d6987;
+      --brand: #1f5eff;
+      --brand-soft: #e7eeff;
+      --ok: #0f8f61;
+      --warn: #b85f00;
+      --danger: #c03333;
+      --shadow: 0 20px 35px rgba(22, 32, 56, 0.08);
+      --r-lg: 18px;
+      --r-md: 14px;
+      --r-sm: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "Avenir Next", "PingFang SC", "Noto Sans SC", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(1200px 500px at 10% -10%, #deebff 0%, transparent 58%),
+        radial-gradient(900px 460px at 95% 4%, #dff8f2 0%, transparent 55%),
+        var(--bg);
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 10px 14px;
+      backdrop-filter: blur(10px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #111 0%, #2e3f6f 100%);
+      color: #fff;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 20px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .model-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      font-size: 12px;
+      color: #20406f;
+      background: #edf2fb;
+      border: 1px solid #d6e0f0;
+      border-radius: 999px;
+      padding: 5px 10px;
+    }
+
+    .workspace {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 320px minmax(420px, 1fr) 320px;
+      gap: 14px;
+    }
+
+    .panel {
+      min-height: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid #e5eaf4;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .panel-head small {
+      color: var(--muted);
+    }
+
+    .panel-scroll {
+      min-height: 0;
+      overflow: auto;
+      padding: 12px;
+    }
+
+    .section {
+      background: var(--panel-strong);
+      border: 1px solid #e3e8f1;
+      border-radius: var(--r-md);
+      padding: 12px;
+      margin-bottom: 12px;
+      animation: fade-up 220ms ease both;
+    }
+
+    .section h3 {
+      margin: 0 0 10px;
+      font-size: 14px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .tab {
+      border: 1px solid #d9e0ec;
+      background: #f4f7fc;
+      color: #385074;
+      border-radius: 999px;
+      padding: 7px 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      color: #fff;
+      border-color: #1f5eff;
+      background: linear-gradient(135deg, #2a63ff 0%, #1748d4 100%);
+    }
+
+    .ingest-pane {
+      display: none;
+      gap: 8px;
+    }
+
+    .ingest-pane.active {
+      display: grid;
+    }
+
+    label {
+      font-size: 12px;
+      color: #55637c;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    input,
+    textarea,
+    button,
+    select {
+      font: inherit;
+    }
+
+    input[type="text"],
+    input[type="url"],
+    textarea {
+      width: 100%;
+      border: 1px solid #d7deeb;
+      background: #fcfdff;
+      color: var(--ink);
+      border-radius: var(--r-sm);
+      padding: 9px 10px;
+      outline: none;
+      transition: border-color 150ms ease, box-shadow 150ms ease;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #6f90ff;
+      box-shadow: 0 0 0 3px #dce6ff;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+      max-height: 220px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 999px;
+      cursor: pointer;
+      padding: 8px 13px;
+      font-weight: 600;
+      transition: transform 120ms ease, filter 120ms ease;
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn:disabled {
+      cursor: not-allowed;
+      filter: grayscale(0.6);
+      opacity: 0.6;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #1f5eff 0%, #1d49c4 100%);
+      color: #fff;
+    }
+
+    .btn-soft {
+      background: #eef3ff;
+      color: #23498b;
+      border: 1px solid #d4e0fb;
+    }
+
+    .source-filter {
+      margin-bottom: 10px;
+    }
+
+    .source-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .source-item {
+      border: 1px solid #dde4f1;
+      border-radius: 12px;
+      padding: 10px;
+      background: #f9fbff;
+      display: grid;
+      gap: 6px;
+      transition: transform 120ms ease, border-color 120ms ease;
+    }
+
+    .source-item:hover {
+      transform: translateY(-1px);
+      border-color: #bfd0f8;
+    }
+
+    .source-title {
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+
+    .source-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      color: #62708d;
+      font-size: 11px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 99px;
+      background: #89a3d1;
+      display: inline-block;
+      margin-right: 3px;
+    }
+
+    .chat-head-right {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+      min-width: 260px;
+      max-width: 360px;
+    }
+
+    .chat-body {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(247, 250, 255, 0.82));
+    }
+
+    .msg {
+      max-width: min(860px, 92%);
+      border-radius: 14px;
+      padding: 10px 12px;
+      border: 1px solid #e1e8f5;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+      animation: fade-up 220ms ease both;
+    }
+
+    .msg.user {
+      margin-left: auto;
+      background: #e9f0ff;
+      border-color: #d1def9;
+    }
+
+    .msg.assistant {
+      margin-right: auto;
+      background: #ffffff;
+    }
+
+    .msg-meta {
+      font-size: 11px;
+      color: #60708f;
+      margin-top: 7px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .cite-chip {
+      border: 1px solid #dce4f3;
+      background: #f5f8ff;
+      color: #3f557e;
+      border-radius: 999px;
+      font-size: 11px;
+      padding: 3px 8px;
+      text-decoration: none;
+    }
+
+    .chat-composer {
+      border-top: 1px solid #e4e9f2;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      background: rgba(252, 253, 255, 0.9);
+    }
+
+    .composer-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .checks {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      color: #495978;
+      font-size: 12px;
+    }
+
+    .checks label {
+      margin: 0;
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .studio-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .studio-card {
+      border: 1px solid #dbe3f0;
+      border-radius: 12px;
+      padding: 10px;
+      background: #fafcff;
+      font-size: 12px;
+      color: #4f5f7c;
+    }
+
+    .studio-card b {
+      display: block;
+      color: #1c2a45;
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+
+    .trace-list,
+    .citation-list,
+    .memory-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .trace-item,
+    .citation-item,
+    .memory-item {
+      border: 1px solid #dde4f1;
+      border-radius: 10px;
+      background: #fafcff;
+      padding: 8px;
+      font-size: 12px;
+      color: #44526f;
+      line-height: 1.45;
+    }
+
+    .trace-item b,
+    .citation-item b {
+      color: #1d2b47;
+    }
+
+    .trace-tag {
+      display: inline-block;
+      border-radius: 999px;
+      font-size: 10px;
+      padding: 2px 7px;
+      margin-left: 6px;
+      border: 1px solid #d6deec;
+      background: #f1f4fa;
+    }
+
+    .trace-ok {
+      color: #0f8f61;
+      border-color: #b8e7d4;
+      background: #e9faf3;
+    }
+
+    .trace-skip {
+      color: #9a6300;
+      border-color: #f2d59b;
+      background: #fff6e7;
+    }
+
+    details {
+      border: 1px solid #e0e6f2;
+      border-radius: 12px;
+      background: #fff;
+      padding: 8px 10px;
+    }
+
+    details summary {
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      color: #334262;
+    }
+
+    pre {
+      margin: 8px 0 0;
+      padding: 10px;
+      background: #111c30;
+      color: #d8e7ff;
+      border-radius: 8px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 12px;
+      line-height: 1.4;
+      max-height: 260px;
+    }
+
+    .status {
+      font-size: 12px;
+      color: #40506f;
+      border: 1px solid #dce3f0;
+      background: #f7f9fe;
+      border-radius: 999px;
+      padding: 5px 10px;
+    }
+
+    .status.ok {
+      color: #0d8057;
+      border-color: #bfe8d7;
+      background: #ebfbf4;
+    }
+
+    .status.err {
+      color: #b92f2f;
+      border-color: #f2c5c5;
+      background: #ffefef;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .empty {
+      border: 1px dashed #d0d9e8;
+      border-radius: 10px;
+      padding: 10px;
+      color: #5f6f8e;
+      font-size: 12px;
+      background: #f8fbff;
+    }
+
+    @keyframes fade-up {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 1220px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .chat-head-right {
+        max-width: none;
+      }
+
+      .panel {
+        min-height: 420px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">HA</div>
+        <div>
+          <h1>Hachi Assistant Studio</h1>
+          <p>NotebookLM 风格 · glm5 路由 Agent + qwen 答案生成</p>
+        </div>
+      </div>
+      <div class="model-pills" id="modelPills">
+        <span class="pill">router: ...</span>
+        <span class="pill">answer: ...</span>
+        <span class="pill">embedding: ...</span>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="panel" aria-label="Sources Panel">
+        <div class="panel-head">
+          <h2>来源</h2>
+          <small id="sourceCount">0 个</small>
+        </div>
+        <div class="panel-scroll">
+          <section class="section">
+            <h3>添加来源</h3>
+            <div class="tabs" id="ingestTabs">
+              <button class="tab active" data-mode="text">文本</button>
+              <button class="tab" data-mode="url">URL</button>
+              <button class="tab" data-mode="pdf">PDF</button>
+            </div>
+
+            <div class="ingest-pane active" data-pane="text">
+              <div>
+                <label for="textTitle">标题</label>
+                <input id="textTitle" type="text" placeholder="例如：化学词源摘录" value="开题报告摘录" />
+              </div>
+              <div>
+                <label for="textContent">内容</label>
+                <textarea id="textContent" placeholder="粘贴知识文本"></textarea>
+              </div>
+              <button class="btn btn-primary" id="ingestTextBtn">导入文本</button>
+            </div>
+
+            <div class="ingest-pane" data-pane="url">
+              <div>
+                <label for="urlInput">网页地址</label>
+                <input id="urlInput" type="url" placeholder="https://..." />
+              </div>
+              <div>
+                <label for="urlTitle">标题（可选）</label>
+                <input id="urlTitle" type="text" placeholder="可留空自动提取" />
+              </div>
+              <button class="btn btn-primary" id="ingestUrlBtn">抓取并导入</button>
+            </div>
+
+            <div class="ingest-pane" data-pane="pdf">
+              <div>
+                <label for="pdfFile">选择 PDF</label>
+                <input id="pdfFile" type="file" accept="application/pdf" />
+              </div>
+              <div>
+                <label for="pdfTitle">标题（可选）</label>
+                <input id="pdfTitle" type="text" placeholder="可留空使用文件名" />
+              </div>
+              <button class="btn btn-primary" id="ingestPdfBtn">上传 PDF</button>
+            </div>
+          </section>
+
+          <section class="section">
+            <h3>知识库来源</h3>
+            <input id="sourceFilter" class="source-filter" type="text" placeholder="搜索来源标题" />
+            <div class="source-list" id="sourceList"></div>
+          </section>
+        </div>
+      </aside>
+
+      <section class="panel" aria-label="Chat Panel">
+        <div class="panel-head">
+          <div>
+            <h2>对话</h2>
+            <small id="sessionLabel">Session: 自动创建</small>
+          </div>
+          <div class="chat-head-right">
+            <label for="sessionIdInput">Session ID（可留空）</label>
+            <input id="sessionIdInput" type="text" placeholder="留空自动创建" />
+          </div>
+        </div>
+
+        <div class="chat-body" id="chatThread"></div>
+
+        <div class="chat-composer">
+          <textarea id="questionInput" placeholder="开始输入你的问题，例如：化学一词在中国最早出现在哪？"></textarea>
+          <div class="composer-controls">
+            <div class="checks">
+              <label><input id="allowWeb" type="checkbox" checked /> 允许联网搜索</label>
+              <label><input id="allowMem" type="checkbox" checked /> 允许记忆压缩</label>
+            </div>
+            <button class="btn btn-primary" id="askBtn">提问</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel" aria-label="Studio Panel">
+        <div class="panel-head">
+          <h2>Studio</h2>
+          <span class="status" id="statusPill">Ready</span>
+        </div>
+        <div class="panel-scroll">
+          <section class="section">
+            <h3>工作区</h3>
+            <div class="studio-cards">
+              <div class="studio-card"><b>音频概览</b>把回答重述为语音风格提纲（占位）。</div>
+              <div class="studio-card"><b>思维导图</b>根据答案提取结构化节点（占位）。</div>
+              <div class="studio-card"><b>闪卡</b>将关键事实转成复习卡片（占位）。</div>
+              <div class="studio-card"><b>报告</b>生成可复制的章节化摘要（占位）。</div>
+            </div>
+          </section>
+
+          <section class="section">
+            <h3>最近引用</h3>
+            <div class="citation-list" id="citationList"></div>
+          </section>
+
+          <section class="section">
+            <h3>Agent 工具轨迹</h3>
+            <div class="trace-list" id="toolTraceList"></div>
+          </section>
+
+          <section class="section">
+            <h3>会话记忆</h3>
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+              <button class="btn btn-soft" id="refreshMemoryBtn">刷新记忆</button>
+              <button class="btn btn-soft" id="rebuildMemoryBtn">重整记忆</button>
+            </div>
+            <div class="memory-list" id="memoryList"></div>
+          </section>
+
+          <section class="section">
+            <h3>调试输出</h3>
+            <details>
+              <summary>查看最近一次响应 JSON</summary>
+              <pre id="rawOutput">Ready.</pre>
+            </details>
+          </section>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      sessionId: null,
+      messages: [],
+      sources: [],
+      lastResponse: null,
+      models: null,
+      sourceFilter: "",
+    };
+
+    function $(id) {
+      return document.getElementById(id);
+    }
+
+    function escapeHtml(input) {
+      return String(input || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function withLoading(button, loadingText) {
+      const original = button.textContent;
+      button.disabled = true;
+      button.textContent = loadingText;
+      return () => {
+        button.disabled = false;
+        button.textContent = original;
+      };
+    }
+
+    function setStatus(text, type = "") {
+      const pill = $("statusPill");
+      pill.textContent = text;
+      pill.className = `status ${type}`.trim();
+    }
+
+    async function requestJson(path, options = {}) {
+      const response = await fetch(path, options);
+      let payload = null;
+      try {
+        payload = await response.json();
+      } catch (_error) {
+        payload = null;
+      }
+
+      if (!response.ok) {
+        const detail = payload && (payload.detail || payload.error || payload.message);
+        throw new Error(detail ? String(detail) : `HTTP ${response.status}`);
+      }
+      return payload;
+    }
+
+    function sourceTypeLabel(sourceType) {
+      if (sourceType === "pdf") return "PDF";
+      if (sourceType === "url") return "Web";
+      return "Text";
+    }
+
+    function renderModels() {
+      const holder = $("modelPills");
+      if (!state.models) {
+        holder.innerHTML = '<span class="pill">models unavailable</span>';
+        return;
+      }
+      holder.innerHTML = [
+        `<span class="pill">router: ${escapeHtml(state.models.router)}</span>`,
+        `<span class="pill">answer: ${escapeHtml(state.models.answer)}</span>`,
+        `<span class="pill">embedding: ${escapeHtml(state.models.embedding)}</span>`,
+      ].join("");
+    }
+
+    function renderSources() {
+      const list = $("sourceList");
+      const keyword = state.sourceFilter.trim().toLowerCase();
+      const rows = state.sources.filter((item) => {
+        if (!keyword) return true;
+        return String(item.title || "").toLowerCase().includes(keyword);
+      });
+
+      $("sourceCount").textContent = `${rows.length} 个`;
+
+      if (!rows.length) {
+        list.innerHTML = '<div class="empty">暂无来源，可先在上方导入文本、URL 或 PDF。</div>';
+        return;
+      }
+
+      list.innerHTML = rows
+        .map((item) => {
+          const created = item.created_at ? new Date(item.created_at).toLocaleString() : "-";
+          return `
+            <article class="source-item">
+              <div class="source-title">${escapeHtml(item.title || "未命名来源")}</div>
+              <div class="source-meta">
+                <span><span class="dot"></span>${escapeHtml(sourceTypeLabel(item.source_type))}</span>
+                <span>Chunks: ${escapeHtml(String(item.chunks ?? 0))}</span>
+                <span>${escapeHtml(created)}</span>
+              </div>
+            </article>
+          `;
+        })
+        .join("");
+    }
+
+    function renderChat() {
+      const thread = $("chatThread");
+      if (!state.messages.length) {
+        thread.innerHTML = `
+          <div class="msg assistant">
+            你好，我是 Hachi Assistant。你可以先在左侧导入资料，再在这里提问。<br>
+            当前模式：<b>glm5 路由 + qwen 生成</b>。
+            <div class="msg-meta">提示：对时效性问题可开启联网搜索。</div>
+          </div>
+        `;
+        return;
+      }
+
+      thread.innerHTML = state.messages
+        .map((msg) => {
+          const citeHtml = (msg.citations || [])
+            .slice(0, 5)
+            .map((c) => {
+              const label = c.title || c.url || c.source_type || "citation";
+              const href = c.url && c.url.startsWith("http") ? c.url : "";
+              if (href) {
+                return `<a class="cite-chip" href="${escapeHtml(href)}" target="_blank" rel="noreferrer">${escapeHtml(label)}</a>`;
+              }
+              return `<span class="cite-chip">${escapeHtml(label)}</span>`;
+            })
+            .join("");
+
+          return `
+            <div class="msg ${msg.role}">
+              ${escapeHtml(msg.content).replaceAll("\n", "<br>")}
+              <div class="msg-meta">
+                <span>${msg.role === "user" ? "你" : "Assistant"}</span>
+                ${msg.time ? `<span>${escapeHtml(msg.time)}</span>` : ""}
+                ${citeHtml}
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+
+      thread.scrollTop = thread.scrollHeight;
+    }
+
+    function renderToolTrace(trace = []) {
+      const holder = $("toolTraceList");
+      if (!trace.length) {
+        holder.innerHTML = '<div class="empty">暂无工具轨迹。</div>';
+        return;
+      }
+
+      holder.innerHTML = trace
+        .map((item) => {
+          const status = String(item.status || "unknown");
+          const statusClass = status === "ok" ? "trace-ok" : status === "skipped" ? "trace-skip" : "";
+          const detailPairs = Object.entries(item)
+            .filter(([k]) => k !== "tool" && k !== "status")
+            .slice(0, 4)
+            .map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : String(v)}`)
+            .join(" · ");
+
+          return `
+            <div class="trace-item">
+              <b>${escapeHtml(String(item.tool || "tool"))}</b>
+              <span class="trace-tag ${statusClass}">${escapeHtml(status)}</span>
+              ${detailPairs ? `<div class="muted" style="margin-top:4px;">${escapeHtml(detailPairs)}</div>` : ""}
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    function renderCitations(citations = []) {
+      const holder = $("citationList");
+      if (!citations.length) {
+        holder.innerHTML = '<div class="empty">暂无引用。</div>';
+        return;
+      }
+
+      holder.innerHTML = citations
+        .map((c) => {
+          const urlHtml = c.url ? `<a class="cite-chip" href="${escapeHtml(c.url)}" target="_blank" rel="noreferrer">打开链接</a>` : "";
+          return `
+            <div class="citation-item">
+              <b>${escapeHtml(c.title || "未命名引用")}</b>
+              <div class="muted" style="margin:4px 0;">${escapeHtml(c.source_type || "local")}</div>
+              <div>${escapeHtml(c.snippet || "").slice(0, 180)}</div>
+              <div style="margin-top:6px;">${urlHtml}</div>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    function renderMemory(summary) {
+      const holder = $("memoryList");
+      if (!summary || !summary.has_summary) {
+        holder.innerHTML = '<div class="empty">当前会话暂无压缩记忆。</div>';
+        return;
+      }
+
+      const blocks = [];
+      for (const [label, items] of [
+        ["facts", summary.facts || []],
+        ["open_questions", summary.open_questions || []],
+        ["decisions", summary.decisions || []],
+      ]) {
+        if (!items.length) continue;
+        blocks.push(`
+          <div class="memory-item">
+            <b>${escapeHtml(label)}</b>
+            <div style="margin-top:4px;">${items.map((x) => `• ${escapeHtml(String(x))}`).join("<br>")}</div>
+          </div>
+        `);
+      }
+
+      if (!blocks.length) {
+        blocks.push(`<div class="memory-item">${escapeHtml(summary.raw_summary || "有摘要但为空")}</div>`);
+      }
+
+      holder.innerHTML = blocks.join("");
+    }
+
+    function pushMessage(role, content, citations = []) {
+      state.messages.push({
+        role,
+        content,
+        citations,
+        time: new Date().toLocaleTimeString(),
+      });
+      renderChat();
+    }
+
+    async function refreshModels() {
+      try {
+        state.models = await requestJson("/api/models");
+      } catch (_error) {
+        state.models = null;
+      }
+      renderModels();
+    }
+
+    async function refreshSources() {
+      const data = await requestJson("/api/knowledge/recent?limit=120");
+      state.sources = Array.isArray(data) ? data : [];
+      renderSources();
+    }
+
+    async function fetchMemory() {
+      const sid = state.sessionId || $("sessionIdInput").value.trim();
+      if (!sid) {
+        renderMemory(null);
+        setStatus("无会话可读记忆");
+        return;
+      }
+      const summary = await requestJson(`/api/sessions/${encodeURIComponent(sid)}/memory`);
+      renderMemory(summary);
+      setStatus("记忆已刷新", "ok");
+    }
+
+    async function onIngestText() {
+      const btn = $("ingestTextBtn");
+      const done = withLoading(btn, "导入中...");
+      try {
+        const title = $("textTitle").value.trim();
+        const content = $("textContent").value.trim();
+        if (!title || !content) throw new Error("请填写文本标题和内容");
+
+        const data = await requestJson("/api/knowledge/text", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, content }),
+        });
+
+        setStatus(`文本已入库: ${data.title}`, "ok");
+        $("rawOutput").textContent = JSON.stringify(data, null, 2);
+        await refreshSources();
+      } catch (error) {
+        setStatus(String(error.message || error), "err");
+      } finally {
+        done();
+      }
+    }
+
+    async function onIngestUrl() {
+      const btn = $("ingestUrlBtn");
+      const done = withLoading(btn, "抓取中...");
+      try {
+        const url = $("urlInput").value.trim();
+        const title = $("urlTitle").value.trim();
+        if (!url) throw new Error("请填写 URL");
+
+        const payload = { url, title: title || null };
+        const data = await requestJson("/api/knowledge/url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        setStatus(`网页已入库: ${data.title}`, "ok");
+        $("rawOutput").textContent = JSON.stringify(data, null, 2);
+        await refreshSources();
+      } catch (error) {
+        setStatus(String(error.message || error), "err");
+      } finally {
+        done();
+      }
+    }
+
+    async function onIngestPdf() {
+      const btn = $("ingestPdfBtn");
+      const done = withLoading(btn, "上传中...");
+      try {
+        const file = $("pdfFile").files && $("pdfFile").files[0];
+        if (!file) throw new Error("请先选择 PDF 文件");
+
+        const title = $("pdfTitle").value.trim();
+        const form = new FormData();
+        form.append("file", file);
+        if (title) form.append("title", title);
+
+        const response = await fetch("/api/knowledge/upload", {
+          method: "POST",
+          body: form,
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(String(data.detail || `HTTP ${response.status}`));
+        }
+
+        setStatus(`PDF 已入库: ${data.title}`, "ok");
+        $("rawOutput").textContent = JSON.stringify(data, null, 2);
+        await refreshSources();
+      } catch (error) {
+        setStatus(String(error.message || error), "err");
+      } finally {
+        done();
+      }
+    }
+
+    async function onAsk() {
+      const btn = $("askBtn");
+      const done = withLoading(btn, "思考中...");
+      try {
+        const question = $("questionInput").value.trim();
+        if (!question) throw new Error("请输入问题");
+
+        pushMessage("user", question);
+
+        const sidInput = $("sessionIdInput").value.trim();
+        const data = await requestJson("/api/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: sidInput || state.sessionId || null,
+            question,
+            allow_web: $("allowWeb").checked,
+            allow_memory_compress: $("allowMem").checked,
+            model_mode: "agentic",
+          }),
+        });
+
+        state.sessionId = data.session_id;
+        $("sessionIdInput").value = data.session_id;
+        $("sessionLabel").textContent = `Session: ${data.session_id}`;
+
+        pushMessage("assistant", data.answer || "(无回答)", data.citations || []);
+        renderToolTrace(data.tool_trace || []);
+        renderCitations(data.citations || []);
+        $("rawOutput").textContent = JSON.stringify(data, null, 2);
+
+        state.lastResponse = data;
+        setStatus("回答完成", "ok");
+
+        await fetchMemory().catch(() => null);
+      } catch (error) {
+        pushMessage("assistant", `请求失败：${error.message || error}`);
+        setStatus(String(error.message || error), "err");
+      } finally {
+        done();
+      }
+    }
+
+    async function onRebuildMemory() {
+      const sid = state.sessionId || $("sessionIdInput").value.trim();
+      if (!sid) {
+        setStatus("请先发起至少一次提问以创建会话", "err");
+        return;
+      }
+      setStatus("正在重整记忆...");
+      try {
+        const data = await requestJson(`/api/sessions/${encodeURIComponent(sid)}/memory/rebuild`, {
+          method: "POST",
+        });
+        $("rawOutput").textContent = JSON.stringify(data, null, 2);
+        await fetchMemory();
+      } catch (error) {
+        setStatus(String(error.message || error), "err");
+      }
+    }
+
+    function bindTabs() {
+      const tabs = Array.from(document.querySelectorAll(".tab"));
+      const panes = Array.from(document.querySelectorAll(".ingest-pane"));
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          const mode = tab.dataset.mode;
+          tabs.forEach((x) => x.classList.toggle("active", x === tab));
+          panes.forEach((pane) => pane.classList.toggle("active", pane.dataset.pane === mode));
+        });
+      });
+    }
+
+    function bindEvents() {
+      $("ingestTextBtn").addEventListener("click", onIngestText);
+      $("ingestUrlBtn").addEventListener("click", onIngestUrl);
+      $("ingestPdfBtn").addEventListener("click", onIngestPdf);
+      $("askBtn").addEventListener("click", onAsk);
+      $("refreshMemoryBtn").addEventListener("click", () => {
+        fetchMemory().catch((error) => setStatus(String(error.message || error), "err"));
+      });
+      $("rebuildMemoryBtn").addEventListener("click", onRebuildMemory);
+
+      $("sourceFilter").addEventListener("input", (event) => {
+        state.sourceFilter = String(event.target.value || "");
+        renderSources();
+      });
+
+      $("questionInput").addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          onAsk();
+        }
+      });
+    }
+
+    async function bootstrap() {
+      bindTabs();
+      bindEvents();
+      renderChat();
+      renderSources();
+      renderToolTrace();
+      renderCitations();
+      renderMemory(null);
+      setStatus("初始化中...");
+
+      await refreshModels();
+      try {
+        await refreshSources();
+        setStatus("Ready", "ok");
+      } catch (error) {
+        setStatus(`来源加载失败: ${error.message || error}`, "err");
+      }
+    }
+
+    bootstrap();
+  </script>
+</body>
+</html>

@@ -1,13 +1,56 @@
+# OS and editor files
 .DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Local-only workspaces
 .sisyphus/
 open-notebook
 study-plan/
+output/
+
+# Python environments and caches
+.venv/
+venv/
 venv311/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Node/browser build artifacts
+node_modules/
+dist/
+build/
+.vite/
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
 
 # Nested project runtime and generated artifacts
 hachi_mvp/docker_data/
 hachi_mvp/backend/data/
+hachi_mvp/backend/*.db
+hachi_mvp/backend/*.sqlite
+hachi_mvp/backend/*.sqlite3
 hachi_mvp/backend/hachi_mvp_backend.egg-info/
 hachi_mvp/backend/workspace/memory/*.md
 !hachi_mvp/backend/workspace/memory/.gitkeep
-hachi_mvp/backend/.env

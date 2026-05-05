@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="420" viewBox="0 0 1120 420">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#2d4a7a"/>
+    </marker>
+    <style>
+      .box { fill: #f8fbff; stroke: #2d4a7a; stroke-width: 2; rx: 14; }
+      .plugin { fill: #eef4ff; stroke: #1f5eff; stroke-width: 2; rx: 14; }
+      .api { fill: #fff7e8; stroke: #a86612; stroke-width: 2; rx: 14; }
+      .store { fill: #f0fff7; stroke: #1a7d55; stroke-width: 2; rx: 14; }
+      .title { font: 700 25px "PingFang SC", "Microsoft YaHei", sans-serif; fill: #17233f; }
+      .text { font: 18px "PingFang SC", "Microsoft YaHei", sans-serif; fill: #17233f; }
+      .small { font: 15px "PingFang SC", "Microsoft YaHei", sans-serif; fill: #40516f; }
+      .arrow { stroke: #2d4a7a; stroke-width: 2.2; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <text x="560" y="38" text-anchor="middle" class="title">Chrome 网页采集插件数据流</text>
+
+  <rect x="44" y="96" width="170" height="94" class="box"/>
+  <text x="129" y="132" text-anchor="middle" class="text">普通网页</text>
+  <text x="129" y="160" text-anchor="middle" class="small">选中文本 / 页面正文</text>
+
+  <rect x="270" y="56" width="180" height="94" class="plugin"/>
+  <text x="360" y="92" text-anchor="middle" class="text">Content Script</text>
+  <text x="360" y="120" text-anchor="middle" class="small">抽取标题、URL、正文</text>
+
+  <rect x="270" y="206" width="180" height="94" class="plugin"/>
+  <text x="360" y="242" text-anchor="middle" class="text">Popup / Options</text>
+  <text x="360" y="270" text-anchor="middle" class="small">触发采集与配置后端</text>
+
+  <rect x="520" y="130" width="190" height="104" class="plugin"/>
+  <text x="615" y="168" text-anchor="middle" class="text">Background</text>
+  <text x="615" y="196" text-anchor="middle" class="small">请求编排</text>
+  <text x="615" y="218" text-anchor="middle" class="small">失败缓存与重试</text>
+
+  <rect x="780" y="84" width="160" height="92" class="api"/>
+  <text x="860" y="120" text-anchor="middle" class="text">文本入库 API</text>
+  <text x="860" y="148" text-anchor="middle" class="small">/api/knowledge/text</text>
+
+  <rect x="780" y="220" width="160" height="92" class="api"/>
+  <text x="860" y="256" text-anchor="middle" class="text">网页入库 API</text>
+  <text x="860" y="284" text-anchor="middle" class="small">/api/knowledge/page</text>
+
+  <rect x="990" y="148" width="104" height="100" class="store"/>
+  <text x="1042" y="184" text-anchor="middle" class="text">知识库</text>
+  <text x="1042" y="212" text-anchor="middle" class="small">SQLite</text>
+  <text x="1042" y="234" text-anchor="middle" class="small">Milvus</text>
+
+  <path d="M214 143 C238 143, 238 103, 270 103" class="arrow"/>
+  <path d="M214 143 C238 143, 238 253, 270 253" class="arrow"/>
+  <path d="M450 103 C492 103, 492 182, 520 182" class="arrow"/>
+  <path d="M450 253 C492 253, 492 182, 520 182" class="arrow"/>
+  <path d="M710 182 C742 182, 742 130, 780 130" class="arrow"/>
+  <path d="M710 182 C742 182, 742 266, 780 266" class="arrow"/>
+  <path d="M940 130 C965 130, 965 198, 990 198" class="arrow"/>
+  <path d="M940 266 C965 266, 965 198, 990 198" class="arrow"/>
+</svg>

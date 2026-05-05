@@ -5,6 +5,7 @@ import math
 import random
 import re
 import asyncio
+from contextlib import contextmanager
 from typing import Any
 
 import httpx
@@ -74,6 +75,10 @@ class ModelGateway:
 
         dashscope.api_key = self.settings.embedding_api_key
         batch_size = max(1, int(self.settings.embedding_batch_size))
+        if self._dashscope_uses_enable_fusion_param():
+            # Fusion calls can collapse multiple content items into one vector,
+            # so keep one logical document chunk per request.
+            batch_size = 1
         all_embeddings: list[list[float]] = []
 
         for i in range(0, len(texts), batch_size):
@@ -82,6 +87,7 @@ class ModelGateway:
             response = dashscope.MultiModalEmbedding.call(
                 model=self.settings.embedding_model,
                 input=mm_input,
+                **self._dashscope_multimodal_options(),
             )
             data = self._normalize_dashscope_response(response)
             embeddings_payload = data.get("output", {}).get("embeddings", [])
@@ -103,6 +109,7 @@ class ModelGateway:
                     single_resp = dashscope.MultiModalEmbedding.call(
                         model=self.settings.embedding_model,
                         input=[{"text": text}],
+                        **self._dashscope_multimodal_options(),
                     )
                     single_data = self._normalize_dashscope_response(single_resp)
                     single_items = single_data.get("output", {}).get("embeddings", [])
@@ -116,6 +123,18 @@ class ModelGateway:
             all_embeddings.extend(batch_embeddings)
 
         return all_embeddings
+
+    def _dashscope_multimodal_options(self) -> dict[str, Any]:
+        options: dict[str, Any] = {}
+        if self.settings.embedding_dim > 0:
+            options["dimension"] = self.settings.embedding_dim
+        if self._dashscope_uses_enable_fusion_param():
+            options["enable_fusion"] = True
+        return options
+
+    def _dashscope_uses_enable_fusion_param(self) -> bool:
+        model = self.settings.embedding_model.strip().lower()
+        return self.settings.embedding_enable_fusion and model == "qwen3-vl-embedding"
 
     def _resolve_embedding_provider(self, configured_provider: str) -> str:
         provider = (configured_provider or "auto").strip().lower()
@@ -141,6 +160,14 @@ class ModelGateway:
             }
         else:
             data = {"raw": str(response)}
+
+        output = data.get("output")
+        if output is not None and not isinstance(output, dict) and hasattr(output, "__dict__"):
+            data["output"] = {
+                key: getattr(output, key)
+                for key in dir(output)
+                if not key.startswith("_") and not callable(getattr(output, key))
+            }
 
         status_code = data.get("status_code")
         if status_code is not None and int(status_code) >= 400:
@@ -199,7 +226,7 @@ class ModelGateway:
             },
         }
 
-        raw = await self._chat_completion(
+        raw = await self._dashscope_generation_completion(
             base_url=self.settings.glm5_router_base_url,
             api_key=self.settings.glm5_router_api_key,
             model=self.settings.glm5_router_model,
@@ -207,8 +234,8 @@ class ModelGateway:
                 {"role": "system", "content": system},
                 {"role": "user", "content": json.dumps(user, ensure_ascii=False)},
             ],
-            max_tokens=700,
             response_json=True,
+            timeout=90.0,
         )
         parsed = self._parse_json(raw)
         return {
@@ -244,7 +271,7 @@ class ModelGateway:
             },
         }
 
-        raw = await self._chat_completion(
+        raw = await self._dashscope_generation_completion(
             base_url=self.settings.glm5_router_base_url,
             api_key=self.settings.glm5_router_api_key,
             model=self.settings.glm5_router_model,
@@ -252,8 +279,8 @@ class ModelGateway:
                 {"role": "system", "content": system},
                 {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
             ],
-            max_tokens=900,
             response_json=True,
+            timeout=90.0,
         )
         parsed = self._parse_json(raw)
         return {
@@ -312,19 +339,16 @@ class ModelGateway:
         }
 
         try:
-            raw = await asyncio.wait_for(
-                self._chat_completion(
-                    base_url=self.settings.glm5_router_base_url,
-                    api_key=self.settings.glm5_router_api_key,
-                    model=self.settings.glm5_router_model,
-                    messages=[
-                        {"role": "system", "content": system},
-                        {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
-                    ],
-                    max_tokens=600,
-                    response_json=True,
-                ),
-                timeout=12.0,
+            raw = await self._dashscope_generation_completion(
+                base_url=self.settings.glm5_router_base_url,
+                api_key=self.settings.glm5_router_api_key,
+                model=self.settings.glm5_router_model,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
+                ],
+                response_json=True,
+                timeout=25.0,
             )
             parsed = self._parse_json(raw)
         except Exception:
@@ -425,13 +449,130 @@ class ModelGateway:
             "citations": citations,
         }
 
+    async def describe_screenshot(
+        self,
+        *,
+        title: str,
+        image_data_url: str,
+        page_url: str | None = None,
+        prompt: str | None = None,
+    ) -> dict[str, Any]:
+        if self.settings.hachi_mock_mode:
+            return {
+                "summary": f"Mock screenshot description for {title}",
+                "visible_text": [],
+                "key_facts": [],
+                "entities": [],
+                "actions": [],
+            }
+
+        if not self.settings.qwen_answer_base_url or not self.settings.qwen_answer_api_key:
+            raise ValueError("Qwen answer configuration is missing")
+
+        instruction = prompt or (
+            "Analyze this browser screenshot for personal knowledge capture. "
+            "Extract useful visible information, UI state, readable text, key facts, names, dates, "
+            "numbers, and any action items. Return concise JSON only."
+        )
+        user_text = {
+            "page_title": title,
+            "page_url": page_url,
+            "instruction": instruction,
+            "output_schema": {
+                "summary": "string",
+                "visible_text": ["string"],
+                "key_facts": ["string"],
+                "entities": ["string"],
+                "actions": ["string"],
+            },
+        }
+
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": json.dumps(user_text, ensure_ascii=False),
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": image_data_url},
+                    },
+                ],
+            }
+        ]
+        try:
+            raw = await self._chat_completion(
+                base_url=self.settings.qwen_answer_base_url,
+                api_key=self.settings.qwen_answer_api_key,
+                model=self.settings.qwen_answer_model,
+                messages=messages,
+                max_tokens=1400,
+                response_json=True,
+            )
+        except Exception as exc:
+            if "response_format" not in str(exc).lower():
+                raise
+            raw = await self._chat_completion(
+                base_url=self.settings.qwen_answer_base_url,
+                api_key=self.settings.qwen_answer_api_key,
+                model=self.settings.qwen_answer_model,
+                messages=messages,
+                max_tokens=1400,
+                response_json=False,
+            )
+        parsed = self._parse_json(raw)
+        return {
+            "summary": str(parsed.get("summary", "")).strip(),
+            "visible_text": self._as_str_list(parsed.get("visible_text")),
+            "key_facts": self._as_str_list(parsed.get("key_facts")),
+            "entities": self._as_str_list(parsed.get("entities")),
+            "actions": self._as_str_list(parsed.get("actions")),
+        }
+
+    async def run_text_skill(
+        self,
+        *,
+        skill_title: str,
+        instruction: str,
+        input_text: str,
+    ) -> str:
+        if self.settings.hachi_mock_mode:
+            return f"## {skill_title}\n\n{input_text[:240]}"
+
+        if not self.settings.qwen_answer_base_url or not self.settings.qwen_answer_api_key:
+            raise ValueError("Qwen answer configuration is missing")
+
+        system = (
+            "You are executing a personal-assistant skill inside Hachi. "
+            "Follow the skill instruction exactly. Use the provided input only. "
+            "Return polished Chinese markdown. Do not mention that you are an AI model."
+        )
+        user = {
+            "skill_title": skill_title,
+            "instruction": instruction,
+            "input_text": input_text,
+        }
+        return await self._chat_completion(
+            base_url=self.settings.qwen_answer_base_url,
+            api_key=self.settings.qwen_answer_api_key,
+            model=self.settings.qwen_answer_model,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": json.dumps(user, ensure_ascii=False)},
+            ],
+            max_tokens=1600,
+            response_json=False,
+        )
+
     async def _chat_completion(
         self,
         *,
         base_url: str,
         api_key: str,
         model: str,
-        messages: list[dict[str, str]],
+        messages: list[dict[str, Any]],
         max_tokens: int,
         response_json: bool,
     ) -> str:
@@ -473,6 +614,64 @@ class ModelGateway:
             )
         return str(content)
 
+    async def _dashscope_generation_completion(
+        self,
+        *,
+        base_url: str,
+        api_key: str,
+        model: str,
+        messages: list[dict[str, str]],
+        response_json: bool,
+        timeout: float,
+    ) -> str:
+        try:
+            import dashscope
+            from dashscope import Generation
+        except ImportError as exc:
+            raise ValueError("dashscope package is required for glm-5 router calls") from exc
+
+        normalized_messages = list(messages)
+        if response_json:
+            normalized_messages = [
+                {
+                    "role": "system",
+                    "content": "Return strictly valid json object. Do not use markdown fences.",
+                },
+                *normalized_messages,
+            ]
+
+        native_base_url = self._resolve_dashscope_native_base_url(base_url)
+
+        def _call_generation() -> Any:
+            with self._dashscope_base_url(native_base_url, dashscope):
+                return Generation.call(
+                    api_key=api_key,
+                    model=model,
+                    messages=normalized_messages,
+                    result_format="message",
+                    enable_thinking=False,
+                )
+
+        try:
+            response = await asyncio.wait_for(asyncio.to_thread(_call_generation), timeout=timeout)
+        except asyncio.TimeoutError as exc:
+            raise ValueError("Upstream API timeout on glm-5 router call. Please retry.") from exc
+        except Exception as exc:
+            raise ValueError(f"Upstream API connection error on glm-5 router call: {exc}") from exc
+
+        data = self._normalize_dashscope_generation_response(response)
+        output = data.get("output", {})
+        choices = output.get("choices", [])
+        if not choices:
+            raise ValueError("Model returned no choices")
+        message = choices[0].get("message", {})
+        content = message.get("content", "")
+        if isinstance(content, list):
+            return "\n".join(
+                [str(item.get("text", "")) for item in content if isinstance(item, dict)]
+            )
+        return str(content)
+
     async def _post_openai_compatible(
         self,
         *,
@@ -486,7 +685,7 @@ class ModelGateway:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
-        timeout = httpx.Timeout(40.0, connect=15.0)
+        timeout = httpx.Timeout(90.0, connect=20.0)
         async with httpx.AsyncClient(timeout=timeout) as client:
             last_exc: Exception | None = None
             for attempt in range(2):
@@ -524,6 +723,55 @@ class ModelGateway:
                     f"Upstream API request failed on {path}: {type(last_exc).__name__}"
                 ) from last_exc
             raise ValueError(f"Upstream API request failed on {path}")
+
+    def _resolve_dashscope_native_base_url(self, base_url: str) -> str:
+        normalized = (base_url or "").strip().rstrip("/")
+        if not normalized:
+            return "https://dashscope.aliyuncs.com/api/v1"
+        if normalized.endswith("/compatible-mode/v1"):
+            return normalized[: -len("/compatible-mode/v1")] + "/api/v1"
+        return normalized
+
+    @contextmanager
+    def _dashscope_base_url(self, base_url: str, dashscope_module: Any):
+        previous = getattr(dashscope_module, "base_http_api_url", None)
+        dashscope_module.base_http_api_url = base_url
+        try:
+            yield
+        finally:
+            if previous is not None:
+                dashscope_module.base_http_api_url = previous
+
+    def _normalize_dashscope_generation_response(self, response: Any) -> dict[str, Any]:
+        if isinstance(response, dict):
+            data = response
+        else:
+            output = getattr(response, "output", None)
+            if output is not None and hasattr(output, "__dict__"):
+                output = {
+                    key: getattr(output, key)
+                    for key in dir(output)
+                    if not key.startswith("_") and not callable(getattr(output, key))
+                }
+            data = {
+                "status_code": getattr(response, "status_code", None),
+                "code": getattr(response, "code", None),
+                "message": getattr(response, "message", None),
+                "output": output,
+                "request_id": getattr(response, "request_id", None),
+            }
+
+        status_code = data.get("status_code")
+        if status_code is not None and int(status_code) >= 400:
+            raise ValueError(
+                f"Upstream API error {status_code} on glm-5 router call: code={data.get('code')} message={data.get('message')}"
+            )
+
+        if data.get("code") and data.get("code") != "Success":
+            raise ValueError(
+                f"Upstream API error on glm-5 router call: code={data.get('code')} message={data.get('message')}"
+            )
+        return data
 
     def _parse_json(self, text: str) -> dict[str, Any]:
         cleaned = text.strip()

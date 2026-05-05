@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="560" viewBox="0 0 1120 560">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#31527f"/>
+    </marker>
+    <style>
+      .title { font: 700 26px "PingFang SC", "Microsoft YaHei", sans-serif; fill: #17233f; }
+      .label { font: 700 18px "PingFang SC", "Microsoft YaHei", sans-serif; fill: #17233f; }
+      .text { font: 15px "PingFang SC", "Microsoft YaHei", sans-serif; fill: #40516f; }
+      .input { fill: #f7fbff; stroke: #5a7db8; stroke-width: 2; rx: 14; }
+      .service { fill: #ebf3ff; stroke: #1f5eff; stroke-width: 2.2; rx: 14; }
+      .store { fill: #f0fff7; stroke: #168254; stroke-width: 2; rx: 14; }
+      .model { fill: #fff7e8; stroke: #a86612; stroke-width: 2; rx: 14; }
+      .skill { fill: #f8f0ff; stroke: #7d4ed8; stroke-width: 2; rx: 14; }
+      .arrow { stroke: #31527f; stroke-width: 2.2; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #7d4ed8; stroke-width: 2; stroke-dasharray: 8 6; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <text x="560" y="42" text-anchor="middle" class="title">截图采集与 Skill 辅助处理流程</text>
+
+  <rect x="48" y="92" width="190" height="110" class="input"/>
+  <text x="143" y="128" text-anchor="middle" class="label">Chrome 插件</text>
+  <text x="143" y="158" text-anchor="middle" class="text">框选页面区域</text>
+  <text x="143" y="182" text-anchor="middle" class="text">裁剪可见截图</text>
+
+  <rect x="298" y="92" width="190" height="110" class="service"/>
+  <text x="393" y="128" text-anchor="middle" class="label">截图入库接口</text>
+  <text x="393" y="158" text-anchor="middle" class="text">/api/knowledge/screenshot</text>
+  <text x="393" y="182" text-anchor="middle" class="text">校验 data:image URL</text>
+
+  <rect x="548" y="92" width="190" height="110" class="model"/>
+  <text x="643" y="128" text-anchor="middle" class="label">视觉模型分析</text>
+  <text x="643" y="158" text-anchor="middle" class="text">可见文字 / 事实</text>
+  <text x="643" y="182" text-anchor="middle" class="text">实体 / 行动项</text>
+
+  <rect x="798" y="92" width="250" height="110" class="store"/>
+  <text x="923" y="128" text-anchor="middle" class="label">知识库</text>
+  <text x="923" y="158" text-anchor="middle" class="text">格式化为文本片段</text>
+  <text x="923" y="182" text-anchor="middle" class="text">SQLite + Milvus 检索</text>
+
+  <rect x="178" y="322" width="210" height="118" class="input"/>
+  <text x="283" y="358" text-anchor="middle" class="label">最近回答 / 输入框</text>
+  <text x="283" y="388" text-anchor="middle" class="text">作为 Skill 输入</text>
+  <text x="283" y="412" text-anchor="middle" class="text">支持自定义指令</text>
+
+  <rect x="458" y="322" width="220" height="118" class="skill"/>
+  <text x="568" y="358" text-anchor="middle" class="label">SkillService</text>
+  <text x="568" y="388" text-anchor="middle" class="text">摘要 / 检测题</text>
+  <text x="568" y="412" text-anchor="middle" class="text">卡片 / 行动清单</text>
+
+  <rect x="748" y="322" width="220" height="118" class="model"/>
+  <text x="858" y="358" text-anchor="middle" class="label">回答模型</text>
+  <text x="858" y="388" text-anchor="middle" class="text">按指令生成 Markdown</text>
+  <text x="858" y="412" text-anchor="middle" class="text">返回前端辅助面板</text>
+
+  <path d="M238 147 H298" class="arrow"/>
+  <path d="M488 147 H548" class="arrow"/>
+  <path d="M738 147 H798" class="arrow"/>
+  <path d="M923 202 V262 H568 V322" class="dash"/>
+  <path d="M388 381 H458" class="arrow"/>
+  <path d="M678 381 H748" class="arrow"/>
+</svg>

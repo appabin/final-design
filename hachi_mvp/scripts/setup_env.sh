@@ -69,17 +69,19 @@ provider_choice="${provider_choice:-1}"
 embedding_provider="dashscope_multimodal"
 embedding_model="tongyi-embedding-vision-flash-2026-03-06"
 embedding_base_url=""
+embedding_dim_default="768"
 
 if [[ "$provider_choice" == "2" ]]; then
   embedding_provider="openai_compatible"
   embedding_model="text-embedding-v4"
   embedding_base_url="https://dashscope.aliyuncs.com/compatible-mode/v1"
+  embedding_dim_default="1536"
 fi
 
 embedding_provider="$(ask_value "EMBEDDING_PROVIDER" "$embedding_provider")"
 embedding_model="$(ask_value "EMBEDDING_MODEL" "$embedding_model")"
 embedding_batch_size="$(ask_value "EMBEDDING_BATCH_SIZE" "5")"
-embedding_dim="$(ask_value "EMBEDDING_DIM" "1536")"
+embedding_dim="$(ask_value "EMBEDDING_DIM" "$embedding_dim_default")"
 embedding_api_key="$(ask_value "EMBEDDING_API_KEY" "" "true")"
 
 glm_base_url="$(ask_value "GLM5_ROUTER_BASE_URL" "https://dashscope.aliyuncs.com/compatible-mode/v1")"

@@ -81,6 +81,20 @@ class MilvusVectorStore:
         self._fallback = InMemoryVectorStore()
         self._client = None
 
+    def _collection_vector_dim(self) -> Optional[int]:
+        if self._client is None:
+            return None
+
+        description = self._client.describe_collection(collection_name=self.collection)
+        fields = description.get("fields", [])
+        for field in fields:
+            if field.get("name") != "vector":
+                continue
+            params = field.get("params", {})
+            dim = params.get("dim")
+            return int(dim) if dim is not None else None
+        return None
+
     def initialize(self) -> None:
         if not self._enabled:
             self._fallback.initialize()
@@ -141,6 +155,17 @@ class MilvusVectorStore:
                     schema=schema,
                     index_params=index_params,
                 )
+            else:
+                existing_dim = self._collection_vector_dim()
+                if existing_dim is not None and existing_dim != self.dimension:
+                    raise RuntimeError(
+                        "Milvus collection dimension mismatch: "
+                        f"collection={self.collection} schema_dim={existing_dim} "
+                        f"embedding_dim={self.dimension}. "
+                        "Use a new MILVUS_COLLECTION or align EMBEDDING_DIM with the model output."
+                    )
+        except RuntimeError:
+            raise
         except Exception as exc:
             # If Milvus init fails, keep service available with in-memory fallback.
             self._client = None
@@ -157,6 +182,14 @@ class MilvusVectorStore:
             self._fallback.upsert(records)
             return
 
+        for record in records:
+            if len(record.vector) != self.dimension:
+                raise RuntimeError(
+                    "Embedding dimension mismatch before Milvus upsert: "
+                    f"expected={self.dimension} actual={len(record.vector)} "
+                    f"collection={self.collection}"
+                )
+
         data = []
         for rec in records:
             data.append(
@@ -172,8 +205,10 @@ class MilvusVectorStore:
             )
         try:
             self._client.upsert(collection_name=self.collection, data=data)
-        except Exception:
-            self._fallback.upsert(records)
+        except Exception as exc:
+            raise RuntimeError(
+                f"Milvus upsert failed for collection={self.collection}: {type(exc).__name__}: {exc}"
+            ) from exc
 
     def search(self, query_vector: list[float], top_k: int, min_score: float) -> list[dict[str, Any]]:
         if self._client is None:

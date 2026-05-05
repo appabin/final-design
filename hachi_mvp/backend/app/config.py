@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     hachi_env: str = "dev"
-    hachi_host: str = "0.0.0.0"
+    hachi_host: str = "127.0.0.1"
     hachi_port: int = 8008
     hachi_mock_mode: bool = False
 
@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     embedding_model: str = "text-embedding-3-small"
     embedding_dim: int = 1536
     embedding_batch_size: int = 10
+    embedding_enable_fusion: bool = False
 
     glm5_router_base_url: str = ""
     glm5_router_api_key: str = ""
@@ -44,6 +45,9 @@ class Settings(BaseSettings):
 
     memory_max_messages: int = 12
     memory_max_tokens: int = 2500
+
+    hachi_enable_desktop_notifications: bool = True
+    reminder_poll_interval_seconds: float = 15.0
 
     @property
     def role_bindings(self) -> dict[str, str]:

@@ -1,0 +1,6 @@
+*.pdf
+*.pdf.png
+*.log
+.typst/
+fonts/
+additional/*.zip

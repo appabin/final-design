@@ -90,6 +90,21 @@ class SQLiteStore:
 
                 CREATE INDEX IF NOT EXISTS idx_memory_summaries_session_id
                 ON memory_summaries(session_id, updated_at);
+
+                CREATE TABLE IF NOT EXISTS reminders (
+                  id TEXT PRIMARY KEY,
+                  title TEXT NOT NULL,
+                  body TEXT NOT NULL,
+                  remind_at TEXT NOT NULL,
+                  remind_at_epoch REAL NOT NULL,
+                  source_text TEXT NOT NULL,
+                  status TEXT NOT NULL,
+                  created_at TEXT NOT NULL,
+                  fired_at TEXT
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_reminders_status_time
+                ON reminders(status, remind_at_epoch);
                 """
             )
             self._conn.commit()
@@ -397,3 +412,101 @@ class SQLiteStore:
 
         scored.sort(key=lambda x: x[0], reverse=True)
         return [item for _, item in scored[: max(1, limit)]]
+
+    def create_reminder(
+        self,
+        *,
+        title: str,
+        body: str,
+        remind_at: str,
+        remind_at_epoch: float,
+        source_text: str,
+    ) -> dict[str, Any]:
+        now = utc_now_iso()
+        reminder_id = str(uuid.uuid4())
+        with self._lock:
+            self._conn.execute(
+                """
+                INSERT INTO reminders(
+                  id, title, body, remind_at, remind_at_epoch, source_text, status, created_at, fired_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    reminder_id,
+                    title,
+                    body,
+                    remind_at,
+                    float(remind_at_epoch),
+                    source_text,
+                    "pending",
+                    now,
+                    None,
+                ),
+            )
+            self._conn.commit()
+        return {
+            "id": reminder_id,
+            "title": title,
+            "body": body,
+            "remind_at": remind_at,
+            "remind_at_epoch": float(remind_at_epoch),
+            "source_text": source_text,
+            "status": "pending",
+            "created_at": now,
+            "fired_at": None,
+        }
+
+    def list_reminders(self, limit: int = 50, status: str | None = None) -> list[dict[str, Any]]:
+        safe_limit = max(1, min(200, int(limit)))
+        with self._lock:
+            if status:
+                rows = self._conn.execute(
+                    """
+                    SELECT *
+                    FROM reminders
+                    WHERE status = ?
+                    ORDER BY remind_at_epoch ASC
+                    LIMIT ?
+                    """,
+                    (status, safe_limit),
+                ).fetchall()
+            else:
+                rows = self._conn.execute(
+                    """
+                    SELECT *
+                    FROM reminders
+                    ORDER BY
+                      CASE status WHEN 'pending' THEN 0 ELSE 1 END,
+                      remind_at_epoch ASC
+                    LIMIT ?
+                    """,
+                    (safe_limit,),
+                ).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_due_reminders(self, now_epoch: float, limit: int = 20) -> list[dict[str, Any]]:
+        with self._lock:
+            rows = self._conn.execute(
+                """
+                SELECT *
+                FROM reminders
+                WHERE status = 'pending' AND remind_at_epoch <= ?
+                ORDER BY remind_at_epoch ASC
+                LIMIT ?
+                """,
+                (float(now_epoch), max(1, int(limit))),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def mark_reminder_fired(self, reminder_id: str) -> None:
+        now = utc_now_iso()
+        with self._lock:
+            self._conn.execute(
+                """
+                UPDATE reminders
+                SET status = 'fired', fired_at = ?
+                WHERE id = ? AND status = 'pending'
+                """,
+                (now, reminder_id),
+            )
+            self._conn.commit()

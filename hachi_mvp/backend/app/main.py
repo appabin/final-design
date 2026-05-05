@@ -18,15 +18,21 @@ from .schemas import (
     AskRequest,
     AskResponse,
     KnowledgeIngestResponse,
+    KnowledgeScreenshotRequest,
     KnowledgeTextRequest,
     KnowledgeURLRequest,
     MemoryRebuildResponse,
     MemorySummaryResponse,
     ModelBindingsResponse,
+    ReminderResponse,
+    SkillRunRequest,
+    SkillRunResponse,
 )
 from .services.ask_service import AskService
 from .services.knowledge_service import KnowledgeService
 from .services.personalization_service import PersonalizationService
+from .services.reminder_service import ReminderService
+from .services.skill_service import SkillService
 from .profile_workspace import ProfileWorkspace
 from .tools import AgentTools
 from .vector_store import VectorStore
@@ -41,6 +47,8 @@ class AppContext:
     tools: AgentTools
     ask_service: AskService
     knowledge_service: KnowledgeService
+    reminder_service: ReminderService
+    skill_service: SkillService
     profile_workspace: ProfileWorkspace
     personalization_service: PersonalizationService
 
@@ -80,6 +88,8 @@ def build_context(cfg: Settings) -> AppContext:
         models=models,
         vector_store=vector_store,
     )
+    reminder_service = ReminderService(settings=cfg, db=db)
+    skill_service = SkillService(models=models, reminders=reminder_service)
 
     return AppContext(
         settings=cfg,
@@ -89,6 +99,8 @@ def build_context(cfg: Settings) -> AppContext:
         tools=tools,
         ask_service=ask_service,
         knowledge_service=knowledge_service,
+        reminder_service=reminder_service,
+        skill_service=skill_service,
         profile_workspace=profile_workspace,
         personalization_service=personalization_service,
     )
@@ -97,13 +109,27 @@ def build_context(cfg: Settings) -> AppContext:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.ctx = build_context(settings)
+    app.state.ctx.reminder_service.start()
     try:
         yield
     finally:
+        await app.state.ctx.reminder_service.stop()
         app.state.ctx.db.close()
 
 
-app = FastAPI(title="Hachi Assistant MVP", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Hachi Assistant", version="1.0.0", lifespan=lifespan)
+
+
+def translate_exception(exc: Exception) -> HTTPException:
+    detail = str(exc)
+    lowered = detail.lower()
+    if "timeout" in lowered:
+        return HTTPException(status_code=504, detail=detail)
+    if "connection error" in lowered:
+        return HTTPException(status_code=502, detail=detail)
+    if "upstream api error" in lowered:
+        return HTTPException(status_code=502, detail=detail)
+    return HTTPException(status_code=400, detail=detail)
 
 
 @app.get("/health")
@@ -134,7 +160,21 @@ async def ask(req: AskRequest) -> AskResponse:
     try:
         return await app.state.ctx.ask_service.ask(req)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise translate_exception(exc) from exc
+
+
+@app.post("/api/skills/run", response_model=SkillRunResponse)
+async def run_skill(req: SkillRunRequest) -> SkillRunResponse:
+    try:
+        return await app.state.ctx.skill_service.run(req)
+    except Exception as exc:
+        raise translate_exception(exc) from exc
+
+
+@app.get("/api/reminders", response_model=list[ReminderResponse])
+async def list_reminders(limit: int = 50, status: str | None = None) -> list[ReminderResponse]:
+    reminders = app.state.ctx.reminder_service.list_reminders(limit=limit, status=status)
+    return [ReminderResponse(**item) for item in reminders]
 
 
 @app.get("/api/sessions/{session_id}/memory", response_model=MemorySummaryResponse)
@@ -142,7 +182,7 @@ async def get_memory(session_id: str) -> MemorySummaryResponse:
     try:
         return await app.state.ctx.ask_service.get_memory(session_id)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise translate_exception(exc) from exc
 
 
 @app.post("/api/sessions/{session_id}/memory/rebuild", response_model=MemoryRebuildResponse)
@@ -155,19 +195,37 @@ async def rebuild_memory(session_id: str) -> MemoryRebuildResponse:
             updated_at=summary.updated_at,
         )
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise translate_exception(exc) from exc
 
 
 @app.post("/api/knowledge/text", response_model=KnowledgeIngestResponse)
 async def ingest_text(req: KnowledgeTextRequest) -> KnowledgeIngestResponse:
     try:
+        content = req.resolved_content()
         result = await app.state.ctx.knowledge_service.ingest_text(
             title=req.title,
-            content=req.content,
+            content=content,
+            source_type="text",
+            source_uri=req.url,
         )
         return KnowledgeIngestResponse(**result)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise translate_exception(exc) from exc
+
+
+@app.post("/api/knowledge/page", response_model=KnowledgeIngestResponse)
+async def ingest_page(req: KnowledgeTextRequest) -> KnowledgeIngestResponse:
+    try:
+        content = req.resolved_content()
+        result = await app.state.ctx.knowledge_service.ingest_text(
+            title=req.title,
+            content=content,
+            source_type="url" if req.url else "text",
+            source_uri=req.url,
+        )
+        return KnowledgeIngestResponse(**result)
+    except Exception as exc:
+        raise translate_exception(exc) from exc
 
 
 @app.post("/api/knowledge/url", response_model=KnowledgeIngestResponse)
@@ -179,7 +237,22 @@ async def ingest_url(req: KnowledgeURLRequest) -> KnowledgeIngestResponse:
         )
         return KnowledgeIngestResponse(**result)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise translate_exception(exc) from exc
+
+
+@app.post("/api/knowledge/screenshot", response_model=KnowledgeIngestResponse)
+async def ingest_screenshot(req: KnowledgeScreenshotRequest) -> KnowledgeIngestResponse:
+    try:
+        result = await app.state.ctx.knowledge_service.ingest_screenshot(
+            title=req.title,
+            image_data_url=req.image_data_url,
+            source_uri=req.url,
+            metadata=req.metadata,
+            prompt=req.prompt,
+        )
+        return KnowledgeIngestResponse(**result)
+    except Exception as exc:
+        raise translate_exception(exc) from exc
 
 
 @app.post("/api/knowledge/upload", response_model=KnowledgeIngestResponse)
@@ -197,7 +270,7 @@ async def ingest_upload(file: UploadFile = File(...), title: str | None = None) 
         )
         return KnowledgeIngestResponse(**result)
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise translate_exception(exc) from exc
     finally:
         if tmp_path.exists():
             tmp_path.unlink(missing_ok=True)

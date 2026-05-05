@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hachi 网页采集器</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="popup-body">
+    <main class="panel">
+      <section class="panel-header">
+        <img src="icons/lumina-128.png" alt="Hachi" class="brand-icon" />
+        <div>
+          <p class="eyebrow">Hachi MVP</p>
+          <h1>Hachi 网页采集器</h1>
+        </div>
+      </section>
+
+      <section class="panel-section" id="page-context">
+        <div class="section-row">
+          <span class="label">当前页面</span>
+          <span class="value" id="page-title">加载中...</span>
+        </div>
+        <div class="section-row">
+          <span class="label">当前选区</span>
+          <span class="value" id="selection-preview">正在检查选中文字...</span>
+        </div>
+      </section>
+
+      <section class="panel-section actions">
+        <button id="save-selection" class="primary-button" type="button">保存选中文字</button>
+        <button id="save-page" class="secondary-button" type="button">保存网页正文</button>
+        <button id="save-screenshot" class="secondary-button" type="button">框选截图</button>
+        <button id="retry-last" class="ghost-button" type="button" hidden>重试上次失败上传</button>
+      </section>
+
+      <section class="panel-section status-card" id="status-card">
+        <p class="status-label">状态</p>
+        <p class="status-message" id="status-message">就绪。</p>
+        <p class="status-meta" id="status-meta"></p>
+      </section>
+
+      <section class="panel-section footer-actions">
+        <button id="open-options" class="link-button" type="button">设置</button>
+        <a href="https://developer.chrome.com/docs/extensions/" target="_blank" rel="noreferrer" class="link-button">MV3 文档</a>
+      </section>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

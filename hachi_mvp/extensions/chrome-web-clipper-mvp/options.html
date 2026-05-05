@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hachi 网页采集器设置</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="options-body">
+    <main class="options-shell">
+      <section class="panel-header">
+        <img src="icons/lumina-128.png" alt="Hachi" class="brand-icon" />
+        <div>
+          <p class="eyebrow">Hachi MVP</p>
+          <h1>网页采集器设置</h1>
+        </div>
+      </section>
+
+      <form id="settings-form" class="form-grid">
+        <label class="field">
+          <span>后端地址</span>
+          <input id="api-base-url" name="apiBaseUrl" type="url" placeholder="http://127.0.0.1:8008" required />
+        </label>
+
+        <label class="field">
+          <span>API Token</span>
+          <input id="api-token" name="apiToken" type="password" placeholder="可选的 Bearer Token" />
+        </label>
+
+        <label class="field">
+          <span>选区入库接口</span>
+          <input id="selection-endpoint" name="selectionEndpoint" type="text" placeholder="/api/knowledge/text" required />
+        </label>
+
+        <label class="field">
+          <span>网页入库接口</span>
+          <input id="page-endpoint" name="pageEndpoint" type="text" placeholder="/api/knowledge/page" required />
+        </label>
+
+        <label class="field">
+          <span>截图入库接口</span>
+          <input id="screenshot-endpoint" name="screenshotEndpoint" type="text" placeholder="/api/knowledge/screenshot" required />
+        </label>
+
+        <label class="field">
+          <span>请求超时（毫秒）</span>
+          <input id="timeout-ms" name="timeoutMs" type="number" min="1000" step="500" placeholder="60000" required />
+        </label>
+
+        <div class="button-row">
+          <button class="primary-button" type="submit">保存设置</button>
+          <button class="secondary-button" id="reset-defaults" type="button">恢复默认值</button>
+        </div>
+      </form>
+
+      <section class="panel-section status-card" id="settings-status-card">
+        <p class="status-label">设置状态</p>
+        <p class="status-message" id="settings-status-message">请编辑并保存后端配置。</p>
+      </section>
+
+      <section class="panel-section">
+        <h2>接口说明</h2>
+        <p class="muted-text">选区采集会优先发送到选区入库接口。</p>
+        <p class="muted-text">整页采集会先发送到网页入库接口；如果返回 404 或 405，会自动回退到选区入库接口。</p>
+        <p class="muted-text">截图采集会先让你在页面上画框，只发送框选区域，后端识别图片后把文字分析结果入库。</p>
+      </section>
+    </main>
+
+    <script src="options.js"></script>
+  </body>
+</html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hachi Assistant Studio</title>
+  <title>Hachi 知识助手</title>
   <style>
     :root {
       --bg: #eef1f6;
@@ -17,7 +17,7 @@
       --ok: #0f8f61;
       --warn: #b85f00;
       --danger: #c03333;
-      --shadow: 0 20px 35px rgba(22, 32, 56, 0.08);
+      --shadow: 0 20px 40px rgba(18, 28, 46, 0.08);
       --r-lg: 18px;
       --r-md: 14px;
       --r-sm: 10px;
@@ -49,13 +49,13 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 16px;
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 16px;
+      border-radius: 20px;
       box-shadow: var(--shadow);
-      padding: 10px 14px;
-      backdrop-filter: blur(10px);
+      padding: 14px 18px;
+      backdrop-filter: blur(14px);
     }
 
     .brand {
@@ -66,12 +66,12 @@
     }
 
     .brand-mark {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
       display: grid;
       place-items: center;
-      background: linear-gradient(135deg, #111 0%, #2e3f6f 100%);
+      background: linear-gradient(135deg, #102042 0%, #1f5eff 100%);
       color: #fff;
       font-weight: 700;
       letter-spacing: 0.04em;
@@ -80,32 +80,28 @@
 
     .brand h1 {
       margin: 0;
-      font-size: 20px;
+      font-size: 22px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .brand p {
-      margin: 0;
+      margin: 3px 0 0;
       color: var(--muted);
-      font-size: 12px;
+      font-size: 13px;
     }
 
-    .model-pills {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .pill {
+    .topbar-note {
+      max-width: 360px;
+      padding: 9px 12px;
+      border: 1px solid #d8e4f8;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #fbfdff 0%, #f1f6ff 100%);
+      color: #476083;
       font-size: 12px;
-      color: #20406f;
-      background: #edf2fb;
-      border: 1px solid #d6e0f0;
-      border-radius: 999px;
-      padding: 5px 10px;
+      line-height: 1.45;
+      text-align: right;
     }
 
     .workspace {
@@ -118,7 +114,7 @@
     .panel {
       min-height: 0;
       border: 1px solid var(--line);
-      border-radius: var(--r-lg);
+      border-radius: 22px;
       background: var(--panel);
       box-shadow: var(--shadow);
       backdrop-filter: blur(10px);
@@ -128,7 +124,7 @@
     }
 
     .panel-head {
-      padding: 14px 16px 10px;
+      padding: 16px 18px 12px;
       border-bottom: 1px solid #e5eaf4;
       display: flex;
       align-items: center;
@@ -138,7 +134,7 @@
 
     .panel-head h2 {
       margin: 0;
-      font-size: 20px;
+      font-size: 18px;
     }
 
     .panel-head small {
@@ -148,15 +144,15 @@
     .panel-scroll {
       min-height: 0;
       overflow: auto;
-      padding: 12px;
+      padding: 14px;
     }
 
     .section {
       background: var(--panel-strong);
       border: 1px solid #e3e8f1;
-      border-radius: var(--r-md);
-      padding: 12px;
-      margin-bottom: 12px;
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 14px;
       animation: fade-up 220ms ease both;
     }
 
@@ -213,6 +209,7 @@
 
     input[type="text"],
     input[type="url"],
+    input[type="datetime-local"],
     textarea {
       width: 100%;
       border: 1px solid #d7deeb;
@@ -277,7 +274,7 @@
 
     .source-item {
       border: 1px solid #dde4f1;
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 10px;
       background: #f9fbff;
       display: grid;
@@ -336,8 +333,8 @@
 
     .msg {
       max-width: min(860px, 92%);
-      border-radius: 14px;
-      padding: 10px 12px;
+      border-radius: 18px;
+      padding: 12px 14px;
       border: 1px solid #e1e8f5;
       line-height: 1.55;
       white-space: pre-wrap;
@@ -377,7 +374,7 @@
 
     .chat-composer {
       border-top: 1px solid #e4e9f2;
-      padding: 12px;
+      padding: 14px;
       display: grid;
       gap: 10px;
       background: rgba(252, 253, 255, 0.9);
@@ -415,11 +412,13 @@
 
     .studio-card {
       border: 1px solid #dbe3f0;
-      border-radius: 12px;
-      padding: 10px;
-      background: #fafcff;
+      border-radius: 14px;
+      padding: 12px;
+      background: linear-gradient(180deg, #fbfdff 0%, #f5f8ff 100%);
       font-size: 12px;
       color: #4f5f7c;
+      text-align: left;
+      cursor: pointer;
     }
 
     .studio-card b {
@@ -429,20 +428,43 @@
       font-size: 13px;
     }
 
+    .skill-custom {
+      margin-top: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .skill-result {
+      margin-top: 10px;
+      border: 1px solid #dde4f1;
+      border-radius: 12px;
+      background: #fafcff;
+      padding: 10px;
+      font-size: 12px;
+      color: #44526f;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 320px;
+      overflow: auto;
+    }
+
     .trace-list,
     .citation-list,
-    .memory-list {
+    .memory-list,
+    .reminder-list {
       display: grid;
       gap: 8px;
     }
 
     .trace-item,
     .citation-item,
-    .memory-item {
+    .memory-item,
+    .reminder-item {
       border: 1px solid #dde4f1;
-      border-radius: 10px;
+      border-radius: 12px;
       background: #fafcff;
-      padding: 8px;
+      padding: 10px;
       font-size: 12px;
       color: #44526f;
       line-height: 1.45;
@@ -554,6 +576,16 @@
         grid-template-columns: 1fr;
       }
 
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .topbar-note {
+        max-width: none;
+        text-align: left;
+      }
+
       .chat-head-right {
         max-width: none;
       }
@@ -577,14 +609,12 @@
       <div class="brand">
         <div class="brand-mark">HA</div>
         <div>
-          <h1>Hachi Assistant Studio</h1>
-          <p>NotebookLM 风格 · glm5 路由 Agent + qwen 答案生成</p>
+          <h1>Hachi 知识助手</h1>
+          <p>面向个人知识采集、整理与问答的工作台</p>
         </div>
       </div>
-      <div class="model-pills" id="modelPills">
-        <span class="pill">router: ...</span>
-        <span class="pill">answer: ...</span>
-        <span class="pill">embedding: ...</span>
+      <div class="topbar-note">
+        以知识库为中心，统一处理文本、网页、PDF 与插件采集内容。
       </div>
     </header>
 
@@ -652,10 +682,10 @@
         <div class="panel-head">
           <div>
             <h2>对话</h2>
-            <small id="sessionLabel">Session: 自动创建</small>
+            <small id="sessionLabel">会话：自动创建</small>
           </div>
           <div class="chat-head-right">
-            <label for="sessionIdInput">Session ID（可留空）</label>
+            <label for="sessionIdInput">会话 ID（可留空）</label>
             <input id="sessionIdInput" type="text" placeholder="留空自动创建" />
           </div>
         </div>
@@ -674,20 +704,37 @@
         </div>
       </section>
 
-      <aside class="panel" aria-label="Studio Panel">
+      <aside class="panel" aria-label="Side Panel">
         <div class="panel-head">
-          <h2>Studio</h2>
-          <span class="status" id="statusPill">Ready</span>
+          <h2>辅助面板</h2>
+          <span class="status" id="statusPill">就绪</span>
         </div>
         <div class="panel-scroll">
           <section class="section">
-            <h3>工作区</h3>
+            <h3>扩展能力</h3>
             <div class="studio-cards">
-              <div class="studio-card"><b>音频概览</b>把回答重述为语音风格提纲（占位）。</div>
-              <div class="studio-card"><b>思维导图</b>根据答案提取结构化节点（占位）。</div>
-              <div class="studio-card"><b>闪卡</b>将关键事实转成复习卡片（占位）。</div>
-              <div class="studio-card"><b>报告</b>生成可复制的章节化摘要（占位）。</div>
+              <button class="studio-card" type="button" data-skill-id="note_summary"><b>笔记摘要</b>提炼结论、要点、术语和后续问题。</button>
+              <button class="studio-card" type="button" data-skill-id="quiz"><b>检测题</b>生成选择题、简答题和参考答案。</button>
+              <button class="studio-card" type="button" data-skill-id="flashcards"><b>复习卡片</b>拆成 Anki 风格问答卡片。</button>
+              <button class="studio-card" type="button" data-skill-id="action_plan"><b>行动清单</b>整理成可执行任务和风险点。</button>
+              <button class="studio-card" type="button" data-skill-id="email_reminder"><b>邮件提醒</b>从邮件记录创建电脑定时提醒。</button>
             </div>
+            <div class="skill-custom">
+              <label for="reminderAtInput">邮件提醒时间</label>
+              <input id="reminderAtInput" type="datetime-local" />
+            </div>
+            <div class="skill-custom">
+              <label for="customSkillInput">自定义 Skill</label>
+              <textarea id="customSkillInput" placeholder="例如：把这段内容改成一页面试速查表，按概念、项目追问、回答模板整理。"></textarea>
+              <button class="btn btn-soft" id="runCustomSkillBtn" type="button">运行自定义 Skill</button>
+            </div>
+            <div class="skill-result" id="skillResult">选择一个 Skill，会处理最近一次回答；没有回答时会处理输入框里的内容。</div>
+          </section>
+
+          <section class="section">
+            <h3>定时提醒</h3>
+            <button class="btn btn-soft" id="refreshRemindersBtn" type="button">刷新提醒</button>
+            <div class="reminder-list" id="reminderList" style="margin-top:8px;"></div>
           </section>
 
           <section class="section">
@@ -696,7 +743,7 @@
           </section>
 
           <section class="section">
-            <h3>Agent 工具轨迹</h3>
+            <h3>工具轨迹</h3>
             <div class="trace-list" id="toolTraceList"></div>
           </section>
 
@@ -713,7 +760,7 @@
             <h3>调试输出</h3>
             <details>
               <summary>查看最近一次响应 JSON</summary>
-              <pre id="rawOutput">Ready.</pre>
+              <pre id="rawOutput">就绪。</pre>
             </details>
           </section>
         </div>
@@ -727,7 +774,6 @@
       messages: [],
       sources: [],
       lastResponse: null,
-      models: null,
       sourceFilter: "",
     };
 
@@ -778,21 +824,9 @@
 
     function sourceTypeLabel(sourceType) {
       if (sourceType === "pdf") return "PDF";
-      if (sourceType === "url") return "Web";
-      return "Text";
-    }
-
-    function renderModels() {
-      const holder = $("modelPills");
-      if (!state.models) {
-        holder.innerHTML = '<span class="pill">models unavailable</span>';
-        return;
-      }
-      holder.innerHTML = [
-        `<span class="pill">router: ${escapeHtml(state.models.router)}</span>`,
-        `<span class="pill">answer: ${escapeHtml(state.models.answer)}</span>`,
-        `<span class="pill">embedding: ${escapeHtml(state.models.embedding)}</span>`,
-      ].join("");
+      if (sourceType === "url") return "网页";
+      if (sourceType === "screenshot") return "截图";
+      return "文本";
     }
 
     function renderSources() {
@@ -818,7 +852,7 @@
               <div class="source-title">${escapeHtml(item.title || "未命名来源")}</div>
               <div class="source-meta">
                 <span><span class="dot"></span>${escapeHtml(sourceTypeLabel(item.source_type))}</span>
-                <span>Chunks: ${escapeHtml(String(item.chunks ?? 0))}</span>
+                <span>片段: ${escapeHtml(String(item.chunks ?? 0))}</span>
                 <span>${escapeHtml(created)}</span>
               </div>
             </article>
@@ -832,8 +866,8 @@
       if (!state.messages.length) {
         thread.innerHTML = `
           <div class="msg assistant">
-            你好，我是 Hachi Assistant。你可以先在左侧导入资料，再在这里提问。<br>
-            当前模式：<b>glm5 路由 + qwen 生成</b>。
+            你好，我是 Hachi 知识助手。你可以先在左侧导入资料，再在这里提问。<br>
+            你可以直接提问，系统会结合知识库内容给出带引用的回答。
             <div class="msg-meta">提示：对时效性问题可开启联网搜索。</div>
           </div>
         `;
@@ -858,7 +892,7 @@
             <div class="msg ${msg.role}">
               ${escapeHtml(msg.content).replaceAll("\n", "<br>")}
               <div class="msg-meta">
-                <span>${msg.role === "user" ? "你" : "Assistant"}</span>
+                <span>${msg.role === "user" ? "你" : "Hachi"}</span>
                 ${msg.time ? `<span>${escapeHtml(msg.time)}</span>` : ""}
                 ${citeHtml}
               </div>
@@ -949,6 +983,27 @@
       holder.innerHTML = blocks.join("");
     }
 
+    function renderReminders(reminders = []) {
+      const holder = $("reminderList");
+      if (!Array.isArray(reminders) || !reminders.length) {
+        holder.innerHTML = '<div class="empty">暂无待提醒事项。</div>';
+        return;
+      }
+
+      holder.innerHTML = reminders
+        .map((item) => {
+          const remindAt = item.remind_at ? new Date(item.remind_at).toLocaleString() : "-";
+          return `
+            <div class="reminder-item">
+              <b>${escapeHtml(item.title || "邮件提醒")}</b>
+              <div class="muted" style="margin:4px 0;">${escapeHtml(remindAt)} · ${escapeHtml(item.status || "pending")}</div>
+              <div>${escapeHtml(item.body || "").slice(0, 180)}</div>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
     function pushMessage(role, content, citations = []) {
       state.messages.push({
         role,
@@ -959,19 +1014,82 @@
       renderChat();
     }
 
-    async function refreshModels() {
-      try {
-        state.models = await requestJson("/api/models");
-      } catch (_error) {
-        state.models = null;
+    function getSkillInputText(skillId = "") {
+      if (skillId === "email_reminder") {
+        const draft = $("questionInput").value.trim();
+        if (draft) return draft;
       }
-      renderModels();
+
+      if (state.lastResponse && state.lastResponse.answer) {
+        return String(state.lastResponse.answer).trim();
+      }
+
+      const lastAssistant = [...state.messages].reverse().find((msg) => msg.role === "assistant" && msg.content);
+      if (lastAssistant) {
+        return String(lastAssistant.content).trim();
+      }
+
+      return $("questionInput").value.trim();
+    }
+
+    async function runSkill(skillId, button, customInstruction = "") {
+      const inputText = getSkillInputText(skillId);
+      if (!inputText) {
+        setStatus("没有可处理的内容", "err");
+        return;
+      }
+
+      const metadata = {};
+      if (skillId === "email_reminder") {
+        const reminderAt = $("reminderAtInput").value;
+        if (!reminderAt) {
+          setStatus("请先选择邮件提醒时间", "err");
+          return;
+        }
+        metadata.reminder_at = new Date(reminderAt).toISOString();
+      }
+
+      const done = withLoading(button, "运行中...");
+      try {
+        setStatus("正在运行 Skill...");
+        const payload = {
+          skill_id: skillId,
+          input_text: inputText,
+          metadata,
+        };
+        if (skillId === "custom") {
+          payload.title = "自定义 Skill";
+          payload.custom_instruction = customInstruction;
+        }
+
+        const data = await requestJson("/api/skills/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        $("skillResult").textContent = `# ${data.title}\n\n${data.result || ""}`;
+        $("rawOutput").textContent = JSON.stringify(data, null, 2);
+        if (skillId === "email_reminder") {
+          await refreshReminders();
+        }
+        setStatus("Skill 完成", "ok");
+      } catch (error) {
+        setStatus(String(error.message || error), "err");
+      } finally {
+        done();
+      }
     }
 
     async function refreshSources() {
       const data = await requestJson("/api/knowledge/recent?limit=120");
       state.sources = Array.isArray(data) ? data : [];
       renderSources();
+    }
+
+    async function refreshReminders() {
+      const data = await requestJson("/api/reminders?status=pending&limit=30");
+      renderReminders(Array.isArray(data) ? data : []);
     }
 
     async function fetchMemory() {
@@ -1070,10 +1188,12 @@
       const btn = $("askBtn");
       const done = withLoading(btn, "思考中...");
       try {
-        const question = $("questionInput").value.trim();
+        const questionInput = $("questionInput");
+        const question = questionInput.value.trim();
         if (!question) throw new Error("请输入问题");
 
         pushMessage("user", question);
+        questionInput.value = "";
 
         const sidInput = $("sessionIdInput").value.trim();
         const data = await requestJson("/api/ask", {
@@ -1090,7 +1210,7 @@
 
         state.sessionId = data.session_id;
         $("sessionIdInput").value = data.session_id;
-        $("sessionLabel").textContent = `Session: ${data.session_id}`;
+        $("sessionLabel").textContent = `会话：${data.session_id}`;
 
         pushMessage("assistant", data.answer || "(无回答)", data.citations || []);
         renderToolTrace(data.tool_trace || []);
@@ -1144,10 +1264,30 @@
       $("ingestUrlBtn").addEventListener("click", onIngestUrl);
       $("ingestPdfBtn").addEventListener("click", onIngestPdf);
       $("askBtn").addEventListener("click", onAsk);
+      document.querySelectorAll("[data-skill-id]").forEach((button) => {
+        button.addEventListener("click", () => {
+          runSkill(button.dataset.skillId, button).catch((error) => setStatus(String(error.message || error), "err"));
+        });
+      });
+      $("runCustomSkillBtn").addEventListener("click", () => {
+        const instruction = $("customSkillInput").value.trim();
+        if (!instruction) {
+          setStatus("请先填写自定义 Skill", "err");
+          return;
+        }
+        runSkill("custom", $("runCustomSkillBtn"), instruction).catch((error) =>
+          setStatus(String(error.message || error), "err")
+        );
+      });
       $("refreshMemoryBtn").addEventListener("click", () => {
         fetchMemory().catch((error) => setStatus(String(error.message || error), "err"));
       });
       $("rebuildMemoryBtn").addEventListener("click", onRebuildMemory);
+      $("refreshRemindersBtn").addEventListener("click", () => {
+        refreshReminders()
+          .then(() => setStatus("提醒已刷新", "ok"))
+          .catch((error) => setStatus(String(error.message || error), "err"));
+      });
 
       $("sourceFilter").addEventListener("input", (event) => {
         state.sourceFilter = String(event.target.value || "");
@@ -1170,12 +1310,13 @@
       renderToolTrace();
       renderCitations();
       renderMemory(null);
+      renderReminders();
       setStatus("初始化中...");
 
-      await refreshModels();
       try {
         await refreshSources();
-        setStatus("Ready", "ok");
+        await refreshReminders();
+        setStatus("就绪", "ok");
       } catch (error) {
         setStatus(`来源加载失败: ${error.message || error}`, "err");
       }

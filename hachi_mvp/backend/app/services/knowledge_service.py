@@ -28,11 +28,18 @@ class KnowledgeService:
         self.models = models
         self.vector_store = vector_store
 
-    async def ingest_text(self, *, title: str, content: str) -> dict:
+    async def ingest_text(
+        self,
+        *,
+        title: str,
+        content: str,
+        source_type: str = "text",
+        source_uri: Optional[str] = None,
+    ) -> dict:
         return await self._ingest_content(
             title=title,
-            source_type="text",
-            source_uri=None,
+            source_type=source_type,
+            source_uri=source_uri,
             content=content,
         )
 
@@ -55,6 +62,37 @@ class KnowledgeService:
             content=extracted,
         )
 
+    async def ingest_screenshot(
+        self,
+        *,
+        title: str,
+        image_data_url: str,
+        source_uri: Optional[str] = None,
+        metadata: Optional[dict] = None,
+        prompt: Optional[str] = None,
+    ) -> dict:
+        if not image_data_url.startswith("data:image/"):
+            raise ValueError("image_data_url must be a data:image URL")
+
+        analysis = await self.models.describe_screenshot(
+            title=title,
+            image_data_url=image_data_url,
+            page_url=source_uri,
+            prompt=prompt,
+        )
+        content = self._format_screenshot_analysis(
+            title=title,
+            source_uri=source_uri,
+            metadata=metadata or {},
+            analysis=analysis,
+        )
+        return await self._ingest_content(
+            title=title,
+            source_type="screenshot",
+            source_uri=source_uri,
+            content=content,
+        )
+
     async def ingest_pdf(self, *, file_path: str, title: Optional[str] = None) -> dict:
         if not os.path.exists(file_path):
             raise FileNotFoundError(file_path)
@@ -74,6 +112,44 @@ class KnowledgeService:
             source_uri=file_path,
             content=text,
         )
+
+    def _format_screenshot_analysis(
+        self,
+        *,
+        title: str,
+        source_uri: Optional[str],
+        metadata: dict,
+        analysis: dict,
+    ) -> str:
+        lines = [
+            f"Screenshot title: {title}",
+        ]
+        if source_uri:
+            lines.append(f"Source URL: {source_uri}")
+        captured_at = metadata.get("captured_at")
+        if captured_at:
+            lines.append(f"Captured at: {captured_at}")
+
+        sections = [
+            ("Visual summary", [analysis.get("summary", "")]),
+            ("Visible text", analysis.get("visible_text", [])),
+            ("Key facts", analysis.get("key_facts", [])),
+            ("Entities", analysis.get("entities", [])),
+            ("Actions", analysis.get("actions", [])),
+        ]
+        for heading, values in sections:
+            clean_values = [str(value).strip() for value in values if str(value).strip()]
+            if not clean_values:
+                continue
+            lines.append("")
+            lines.append(f"{heading}:")
+            for value in clean_values:
+                lines.append(f"- {value}")
+
+        content = "\n".join(lines).strip()
+        if not content:
+            raise ValueError("Screenshot analysis is empty")
+        return content
 
     async def _ingest_content(
         self,

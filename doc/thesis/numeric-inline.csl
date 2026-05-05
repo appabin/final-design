@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<style
+  xmlns="http://purl.org/net/xbiblio/csl"
+  class="in-text"
+  version="1.0"
+  default-locale="zh-CN">
+
+  <info>
+    <title>Numeric Inline Citation Only</title>
+    <id>http://www.zotero.org/styles/numeric-inline-citation-only</id>
+    <link href="http://www.zotero.org/styles/numeric-inline-citation-only" rel="self"/>
+    <author>
+      <name>Local Typst Template</name>
+    </author>
+    <category citation-format="numeric"/>
+    <updated>2026-04-30T00:00:00+00:00</updated>
+    <rights license="http://creativecommons.org/licenses/by-sa/3.0/">
+      This work is licensed under a Creative Commons Attribution-ShareAlike 3.0 License
+    </rights>
+  </info>
+
+  <citation collapse="citation-number">
+    <sort>
+      <key variable="citation-number"/>
+    </sort>
+    <layout prefix="[" suffix="]" delimiter=",">
+      <text variable="citation-number"/>
+    </layout>
+  </citation>
+
+  <bibliography>
+    <layout>
+      <text variable="citation-number" prefix="[" suffix="]"/>
+      <text value=" "/>
+      <text variable="title"/>
+    </layout>
+  </bibliography>
+</style>

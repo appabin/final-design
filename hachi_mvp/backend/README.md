@@ -5,12 +5,11 @@ FastAPI + LangGraph + Milvus + SQLite backend for Hachi Assistant MVP.
 ## Run
 
 ```bash
+source /Users/appa/Hachi_Assistant/venv311/bin/activate
 cd /Users/appa/Hachi_Assistant/hachi_mvp/backend
-python -m venv .venv
-source .venv/bin/activate
 pip install -e '.[dev]'
 cp .env.example .env
-uvicorn app.main:app --reload --port 8008
+python -m uvicorn app.main:app --reload --port 8008
 ```
 
 ## Quick Scripts
@@ -19,7 +18,7 @@ uvicorn app.main:app --reload --port 8008
 # 1) Configure backend .env interactively
 /Users/appa/Hachi_Assistant/hachi_mvp/scripts/setup_env.sh
 
-# 2) Create venv/install deps/run backend
+# 2) Run backend with /Users/appa/Hachi_Assistant/venv311
 /Users/appa/Hachi_Assistant/hachi_mvp/scripts/run_backend.sh
 
 # 3) Start/stop remote Milvus stack (Docker)
@@ -54,6 +53,7 @@ EMBEDDING_BATCH_SIZE=5
 - `GET /api/sessions/{id}/memory`
 - `POST /api/sessions/{id}/memory/rebuild`
 - `POST /api/knowledge/text`
+- `POST /api/knowledge/page`
 - `POST /api/knowledge/url`
 - `POST /api/knowledge/upload`
 - `GET /api/knowledge/recent`
@@ -71,7 +71,9 @@ EMBEDDING_BATCH_SIZE=5
 - Recommended on macOS:
   - `MILVUS_MODE=remote`
   - `MILVUS_URI=http://127.0.0.1:19530`
+  - `EMBEDDING_DIM=768` for `tongyi-embedding-vision-flash-2026-03-06`
   - Start Docker Milvus with `scripts/milvus_remote.sh start`
 - `MILVUS_MODE=lite` requires `pymilvus[milvus_lite]` and may fail on some macOS/Python setups.
 - If Milvus cannot initialize, service falls back to in-memory vectors (non-persistent).
+- If you change embedding models, keep `EMBEDDING_DIM` and `MILVUS_COLLECTION` aligned with the vector size.
 - Each `ask` now updates `SOUL.md` / `MEMORY.md` from user tone and weak-topic signals, then passes that personalization into final answer generation.

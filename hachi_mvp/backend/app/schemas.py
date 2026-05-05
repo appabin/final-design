@@ -52,9 +52,42 @@ class ModelBindingsResponse(BaseModel):
     embedding: str
 
 
+class SkillRunRequest(BaseModel):
+    skill_id: str
+    input_text: str = Field(..., min_length=1)
+    title: Optional[str] = None
+    custom_instruction: Optional[str] = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class SkillRunResponse(BaseModel):
+    skill_id: str
+    title: str
+    result: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class ReminderResponse(BaseModel):
+    id: str
+    title: str
+    body: str
+    remind_at: str
+    status: Literal["pending", "fired"]
+    created_at: str
+    fired_at: Optional[str] = None
+    source_text: str = ""
+
+
 class KnowledgeTextRequest(BaseModel):
     title: str
-    content: str
+    content: Optional[str] = None
+    text: Optional[str] = None
+    url: Optional[str] = None
+    source_type: Optional[str] = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+    def resolved_content(self) -> str:
+        return (self.content or self.text or "").strip()
 
 
 class KnowledgeURLRequest(BaseModel):
@@ -62,10 +95,18 @@ class KnowledgeURLRequest(BaseModel):
     title: Optional[str] = None
 
 
+class KnowledgeScreenshotRequest(BaseModel):
+    title: str
+    image_data_url: str = Field(..., min_length=32)
+    url: Optional[str] = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    prompt: Optional[str] = None
+
+
 class KnowledgeIngestResponse(BaseModel):
     doc_id: str
     title: str
-    source_type: Literal["text", "url", "pdf"]
+    source_type: Literal["text", "url", "pdf", "screenshot"]
     chunks: int
     deduplicated: bool
 

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="620" viewBox="0 0 1120 620">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#2d4a7a"/>
+    </marker>
+    <style>
+      .box { fill: #f8fbff; stroke: #2d4a7a; stroke-width: 2; rx: 14; }
+      .core { fill: #e9f1ff; stroke: #1f5eff; stroke-width: 2.4; rx: 14; }
+      .store { fill: #f0fff7; stroke: #1a7d55; stroke-width: 2; rx: 14; }
+      .model { fill: #fff7e8; stroke: #a86612; stroke-width: 2; rx: 14; }
+      .title { font: 700 26px "PingFang SC", "Microsoft YaHei", sans-serif; fill: #17233f; }
+      .text { font: 18px "PingFang SC", "Microsoft YaHei", sans-serif; fill: #17233f; }
+      .small { font: 15px "PingFang SC", "Microsoft YaHei", sans-serif; fill: #40516f; }
+      .arrow { stroke: #2d4a7a; stroke-width: 2.2; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <text x="560" y="42" text-anchor="middle" class="title">Hachi 知识采集管理系统总体架构</text>
+
+  <rect x="40" y="92" width="190" height="112" class="box"/>
+  <text x="135" y="132" text-anchor="middle" class="text">用户入口</text>
+  <text x="135" y="164" text-anchor="middle" class="small">Web 工作台</text>
+  <text x="135" y="188" text-anchor="middle" class="small">Chrome 采集插件</text>
+
+  <rect x="300" y="92" width="230" height="112" class="core"/>
+  <text x="415" y="132" text-anchor="middle" class="text">FastAPI 服务层</text>
+  <text x="415" y="164" text-anchor="middle" class="small">REST API / 文件上传</text>
+  <text x="415" y="188" text-anchor="middle" class="small">异常映射 / 会话管理</text>
+
+  <rect x="610" y="72" width="220" height="152" class="core"/>
+  <text x="720" y="110" text-anchor="middle" class="text">业务服务层</text>
+  <text x="720" y="140" text-anchor="middle" class="small">KnowledgeService</text>
+  <text x="720" y="164" text-anchor="middle" class="small">Ask / Personalization</text>
+  <text x="720" y="188" text-anchor="middle" class="small">SkillService</text>
+  <text x="720" y="212" text-anchor="middle" class="small">ReminderService</text>
+
+  <rect x="900" y="92" width="180" height="112" class="model"/>
+  <text x="990" y="132" text-anchor="middle" class="text">模型网关</text>
+  <text x="990" y="164" text-anchor="middle" class="small">GLM 路由</text>
+  <text x="990" y="188" text-anchor="middle" class="small">Qwen 生成 / Embedding</text>
+
+  <rect x="300" y="300" width="230" height="132" class="core"/>
+  <text x="415" y="340" text-anchor="middle" class="text">Agent 编排层</text>
+  <text x="415" y="372" text-anchor="middle" class="small">LangGraph RouterGraph</text>
+  <text x="415" y="396" text-anchor="middle" class="small">AnswerGraph</text>
+  <text x="415" y="420" text-anchor="middle" class="small">工具调用轨迹</text>
+
+  <rect x="610" y="300" width="220" height="132" class="store"/>
+  <text x="720" y="340" text-anchor="middle" class="text">混合知识存储</text>
+  <text x="720" y="372" text-anchor="middle" class="small">SQLite 文档/会话/片段/提醒</text>
+  <text x="720" y="396" text-anchor="middle" class="small">Milvus 向量集合</text>
+  <text x="720" y="420" text-anchor="middle" class="small">内存向量备用</text>
+
+  <rect x="900" y="300" width="180" height="132" class="store"/>
+  <text x="990" y="340" text-anchor="middle" class="text">个性化空间</text>
+  <text x="990" y="372" text-anchor="middle" class="small">SOUL.md</text>
+  <text x="990" y="396" text-anchor="middle" class="small">MEMORY.md</text>
+  <text x="990" y="420" text-anchor="middle" class="small">每日观察记录</text>
+
+  <rect x="300" y="500" width="530" height="74" class="box"/>
+  <text x="565" y="532" text-anchor="middle" class="text">知识处理主链路</text>
+  <text x="565" y="558" text-anchor="middle" class="small">采集 → 清洗 → 检索 → 证据包 → 回答与引用 → Skill → 提醒</text>
+
+  <path d="M230 148 H300" class="arrow"/>
+  <path d="M530 148 H610" class="arrow"/>
+  <path d="M830 148 H900" class="arrow"/>
+  <path d="M415 204 V300" class="arrow"/>
+  <path d="M530 366 H610" class="arrow"/>
+  <path d="M830 366 H900" class="arrow"/>
+  <path d="M720 300 V224" class="arrow"/>
+  <path d="M415 432 V500" class="arrow"/>
+  <path d="M720 432 V500" class="arrow"/>
+</svg>

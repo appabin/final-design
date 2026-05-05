@@ -12,28 +12,46 @@
   小五: 9pt,
 )
 
-// #let FONTSET = (
-//   Hei: "SimHei", // ("Inter", "Noto Sans CJK SC"),
-//   Song: "SimSun", // "Noto Serif CJK SC",
-//   Kai: "KaiTi", // "FZKai-Z03",
-//   English: "Times New Roman", // "STIX Two Text",
-// )
-
-#let FontEnglish = (name: "Times New Roman", covers: "latin-in-cjk")
-
-#let FontHeiCN = "SimHei"
-#let FontHei = (
-  FontEnglish,
-  "SimHei",
+// Windows fonts are preferred so a fresh Windows checkout can compile with
+// the system fonts used by the official Word template. Noto/FZ/macOS names are
+// retained as fallbacks for bundled fonts and local development.
+#let FontEnglish = (
+  (name: "Times New Roman", covers: "latin-in-cjk"),
+  (name: "STIX Two Text", covers: "latin-in-cjk"),
 )
-#let FontSongCN = "Songti SC"
+
+#let FontHeiCN = (
+  "SimHei",
+  "Microsoft YaHei",
+  "Noto Sans CJK SC",
+  "Heiti SC",
+)
+#let FontHei = (
+  (name: "Times New Roman", covers: "latin-in-cjk"),
+  (name: "STIX Two Text", covers: "latin-in-cjk"),
+  "SimHei",
+  "Microsoft YaHei",
+  "Noto Sans CJK SC",
+  "Heiti SC",
+)
+#let FontSongCN = (
+  "SimSun",
+  "Noto Serif CJK SC",
+  "Songti SC",
+)
 #let FontSong = (
-  FontEnglish,
-  FontSongCN,
+  (name: "Times New Roman", covers: "latin-in-cjk"),
+  (name: "STIX Two Text", covers: "latin-in-cjk"),
+  "SimSun",
+  "Noto Serif CJK SC",
+  "Songti SC",
 )
 #let FontKai = (
-  FontEnglish,
+  (name: "Times New Roman", covers: "latin-in-cjk"),
+  (name: "STIX Two Text", covers: "latin-in-cjk"),
   "KaiTi",
+  "FZKai-Z03",
+  "FZKTK",
 )
 
 #let tableCounter = counter("Table")

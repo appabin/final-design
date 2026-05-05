@@ -26,18 +26,38 @@ python3 -m venv .venv
 pip install -r doc/thesis/requirements.txt
 ```
 
+Windows PowerShell 下对应命令为：
+
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r doc\thesis\requirements.txt
+```
+
 然后执行：
 
 ```bash
 python doc/thesis/build_thesis.py
 ```
 
+Windows 下也可以执行：
+
+```powershell
+python doc\thesis\build_thesis.py
+```
+
 脚本会在 `doc/thesis/` 下生成 `Hachi-Thesis.pdf`。PDF 是生成文件，不需要提交到 Git。
 
-该模板依赖宋体、黑体、楷体、Times New Roman 等字体。若本地字体缺失，可安装系统字体，或从 `QQKdeGit/bupt-typst` v1.2.0 release 下载 `fonts.zip` 并解压到 `doc/thesis/fonts/fonts`。也可以显式传入字体目录：
+该模板已优先使用 Windows 常见字体名：`SimSun`、`SimHei`、`KaiTi`、`Times New Roman`，并保留 Noto/FZ/macOS 字体作为兜底。若本地字体缺失，可安装系统字体，或从 `QQKdeGit/bupt-typst` v1.2.0 release 下载 `fonts.zip` 并解压到 `doc/thesis/fonts/fonts`。也可以显式传入字体目录：
 
 ```bash
 python doc/thesis/build_thesis.py --font-path /path/to/fonts
+```
+
+Windows 示例：
+
+```powershell
+python doc\thesis\build_thesis.py --font-path C:\Windows\Fonts
 ```
 
 首次编译时需要联网下载 `@preview` 模板依赖包，后续会使用本地 Typst 缓存。

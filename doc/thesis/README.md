@@ -48,7 +48,7 @@ python doc\thesis\build_thesis.py
 
 脚本会在 `doc/thesis/` 下生成 `Hachi-Thesis.pdf`。PDF 是生成文件，不需要提交到 Git。
 
-该模板已优先使用 Windows 常见字体名：`SimSun`、`SimHei`、`KaiTi`、`Times New Roman`，并保留 Noto/FZ/macOS 字体作为兜底。若本地字体缺失，可安装系统字体，或从 `QQKdeGit/bupt-typst` v1.2.0 release 下载 `fonts.zip` 并解压到 `doc/thesis/fonts/fonts`。也可以显式传入字体目录：
+该模板已按上游模板注释使用 Windows 字体名：宋体为 `SimSun`，黑体为 `SimHei`，楷体为 `KaiTi`，英文字体为 `Times New Roman`。其中正文中文字体明确使用 Windows 宋体 `SimSun`。若本地字体缺失，可安装系统字体，或从 `QQKdeGit/bupt-typst` v1.2.0 release 下载 `fonts.zip` 并解压到 `doc/thesis/fonts/fonts`。也可以显式传入字体目录：
 
 ```bash
 python doc/thesis/build_thesis.py --font-path /path/to/fonts

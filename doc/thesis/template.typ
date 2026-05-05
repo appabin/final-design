@@ -12,9 +12,8 @@
   小五: 9pt,
 )
 
-// Windows fonts are preferred so a fresh Windows checkout can compile with
-// the system fonts used by the official Word template. Noto/FZ/macOS names are
-// retained as fallbacks for bundled fonts and local development.
+// Windows fonts from the original template are used first. In particular,
+// Windows 宋体 is identified by Typst as "SimSun".
 #let FontEnglish = (
   (name: "Times New Roman", covers: "latin-in-cjk"),
   (name: "STIX Two Text", covers: "latin-in-cjk"),
@@ -34,11 +33,7 @@
   "Noto Sans CJK SC",
   "Heiti SC",
 )
-#let FontSongCN = (
-  "SimSun",
-  "Noto Serif CJK SC",
-  "Songti SC",
-)
+#let FontSongCN = "SimSun"
 #let FontSong = (
   (name: "Times New Roman", covers: "latin-in-cjk"),
   (name: "STIX Two Text", covers: "latin-in-cjk"),

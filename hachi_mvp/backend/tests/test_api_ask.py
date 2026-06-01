@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 import app.main as main_module
+import app.services.reminder_service as reminder_module
 from app.config import Settings
 
 
@@ -38,6 +39,16 @@ def test_ingest_and_ask(tmp_path):
         assert "answer" in payload
         assert "tool_trace" in payload
         assert payload["used_web"] is False
+
+        delete = client.delete(f"/api/knowledge/{ingest.json()['doc_id']}")
+        assert delete.status_code == 200, delete.text
+        delete_payload = delete.json()
+        assert delete_payload["deleted"] is True
+        assert delete_payload["chunks_deleted"] >= 1
+
+        recent = client.get("/api/knowledge/recent")
+        assert recent.status_code == 200
+        assert all(item["id"] != ingest.json()["doc_id"] for item in recent.json())
 
         memory = client.get(f"/api/sessions/{payload['session_id']}/memory")
         assert memory.status_code == 200
@@ -141,7 +152,16 @@ def test_skill_run_builtin_and_custom(tmp_path):
             },
         )
         assert builtin.status_code == 200, builtin.text
-        assert builtin.json()["title"] == "检测题"
+        builtin_payload = builtin.json()
+        assert builtin_payload["title"] == "检测题"
+        assert builtin_payload["markdown_path"].endswith(".md")
+        skill_output = client.get(builtin_payload["markdown_url"])
+        assert skill_output.status_code == 200
+        assert "# 检测题" in skill_output.text
+
+        skill_page = client.get("/tools/skill-result")
+        assert skill_page.status_code == 200, skill_page.text
+        assert "Hachi Skill 结果" in skill_page.text
 
         custom = client.post(
             "/api/skills/run",
@@ -189,6 +209,92 @@ def test_email_reminder_skill_creates_pending_reminder(tmp_path):
         assert len(rows) == 1
         assert rows[0]["title"] == "回复导师论文终稿邮件"
         assert rows[0]["status"] == "pending"
+
+
+def test_email_reminder_can_sync_macos_calendar(tmp_path, monkeypatch):
+    cfg = Settings(
+        hachi_mock_mode=True,
+        sqlite_path=str(tmp_path / "calendar_reminder.db"),
+        milvus_mode="memory",
+        embedding_dim=64,
+        workspace_path=str(tmp_path / "workspace"),
+        hachi_enable_desktop_notifications=False,
+    )
+    main_module.settings = cfg
+
+    class Completed:
+        returncode = 0
+        stdout = "calendar-event-123\n"
+        stderr = ""
+
+    def fake_run(args, **kwargs):
+        assert args[0] == "osascript"
+        assert "Calendar" in args[2]
+        return Completed()
+
+    monkeypatch.setattr(reminder_module.sys, "platform", "darwin")
+    monkeypatch.setattr(reminder_module.subprocess, "run", fake_run)
+
+    with TestClient(main_module.app) as client:
+        skill = client.post(
+            "/api/skills/run",
+            json={
+                "skill_id": "email_reminder",
+                "input_text": "主题：同步到日历\n请提醒我检查论文。",
+                "metadata": {
+                    "reminder_at": "2026-12-01T10:00:00+08:00",
+                    "macos_calendar": True,
+                    "macos_calendar_name": "Hachi Test",
+                },
+            },
+        )
+        assert skill.status_code == 200, skill.text
+        reminder = skill.json()["metadata"]["reminder"]
+        assert reminder["calendar_event_id"] == "calendar-event-123"
+        assert reminder["calendar_error"] is None
+
+
+def test_thesis_image_inbox_saves_pasted_image(tmp_path):
+    cfg = Settings(
+        hachi_mock_mode=True,
+        sqlite_path=str(tmp_path / "image_inbox.db"),
+        milvus_mode="memory",
+        embedding_dim=64,
+        workspace_path=str(tmp_path / "workspace"),
+        thesis_images_path=str(tmp_path / "thesis_images"),
+        hachi_enable_desktop_notifications=False,
+    )
+    main_module.settings = cfg
+
+    png_data_url = (
+        "data:image/png;base64,"
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII="
+    )
+
+    with TestClient(main_module.app) as client:
+        page = client.get("/tools/image-inbox")
+        assert page.status_code == 200, page.text
+        assert "论文图片收集" in page.text
+
+        save = client.post(
+            "/api/tools/thesis-image",
+            json={
+                "image_data_url": png_data_url,
+                "name": "skill-markdown-output",
+                "caption": "Skill Markdown 输出文件截图",
+            },
+        )
+        assert save.status_code == 200, save.text
+        payload = save.json()
+        assert payload["file_name"] == "skill-markdown-output.png"
+        assert payload["relative_path"] == "images/skill-markdown-output.png"
+        assert 'image("images/skill-markdown-output.png", width: 96%)' in payload["typst_snippet"]
+        assert "Skill Markdown 输出文件截图" in payload["typst_snippet"]
+        assert (tmp_path / "thesis_images" / "skill-markdown-output.png").exists()
+
+        image = client.get(f"/api/tools/thesis-image/{payload['file_name']}")
+        assert image.status_code == 200
+        assert image.content
 
 
 def test_ask_timeout_maps_to_504(tmp_path):

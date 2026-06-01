@@ -100,14 +100,26 @@ class SQLiteStore:
                   source_text TEXT NOT NULL,
                   status TEXT NOT NULL,
                   created_at TEXT NOT NULL,
-                  fired_at TEXT
+                  fired_at TEXT,
+                  calendar_event_id TEXT,
+                  calendar_error TEXT
                 );
 
                 CREATE INDEX IF NOT EXISTS idx_reminders_status_time
                 ON reminders(status, remind_at_epoch);
                 """
             )
+            self._ensure_column("reminders", "calendar_event_id", "TEXT")
+            self._ensure_column("reminders", "calendar_error", "TEXT")
             self._conn.commit()
+
+    def _ensure_column(self, table: str, column: str, definition: str) -> None:
+        existing = {
+            str(row["name"])
+            for row in self._conn.execute(f"PRAGMA table_info({table})").fetchall()
+        }
+        if column not in existing:
+            self._conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
 
     def ensure_session(self, session_id: Optional[str], title: Optional[str] = None) -> str:
         sid = session_id or str(uuid.uuid4())
@@ -257,6 +269,14 @@ class SQLiteStore:
             ).fetchone()
         return dict(row) if row else None
 
+    def get_document(self, doc_id: str) -> Optional[dict[str, Any]]:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM documents WHERE id = ?",
+                (doc_id,),
+            ).fetchone()
+        return dict(row) if row else None
+
     def create_document(
         self,
         doc_id: str,
@@ -306,6 +326,17 @@ class SQLiteStore:
                 (doc_id,),
             ).fetchall()
         return [dict(r) for r in rows]
+
+    def delete_document(self, doc_id: str) -> int:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT count(*) AS chunk_count FROM chunks WHERE doc_id = ?",
+                (doc_id,),
+            ).fetchone()
+            chunk_count = int(row["chunk_count"]) if row else 0
+            result = self._conn.execute("DELETE FROM documents WHERE id = ?", (doc_id,))
+            self._conn.commit()
+        return chunk_count if result.rowcount else 0
 
     def list_documents(self, limit: int = 50) -> list[dict[str, Any]]:
         with self._lock:
@@ -421,6 +452,8 @@ class SQLiteStore:
         remind_at: str,
         remind_at_epoch: float,
         source_text: str,
+        calendar_event_id: str | None = None,
+        calendar_error: str | None = None,
     ) -> dict[str, Any]:
         now = utc_now_iso()
         reminder_id = str(uuid.uuid4())
@@ -428,8 +461,9 @@ class SQLiteStore:
             self._conn.execute(
                 """
                 INSERT INTO reminders(
-                  id, title, body, remind_at, remind_at_epoch, source_text, status, created_at, fired_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                  id, title, body, remind_at, remind_at_epoch, source_text, status, created_at, fired_at,
+                  calendar_event_id, calendar_error
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     reminder_id,
@@ -441,6 +475,8 @@ class SQLiteStore:
                     "pending",
                     now,
                     None,
+                    calendar_event_id,
+                    calendar_error,
                 ),
             )
             self._conn.commit()
@@ -454,6 +490,8 @@ class SQLiteStore:
             "status": "pending",
             "created_at": now,
             "fired_at": None,
+            "calendar_event_id": calendar_event_id,
+            "calendar_error": calendar_error,
         }
 
     def list_reminders(self, limit: int = 50, status: str | None = None) -> list[dict[str, Any]]:

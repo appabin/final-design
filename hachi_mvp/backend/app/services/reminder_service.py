@@ -56,12 +56,32 @@ class ReminderService:
         if not body:
             body = text[:280]
 
+        calendar_event_id: str | None = None
+        calendar_error: str | None = None
+        if self._macos_calendar_requested(metadata):
+            if sys.platform != "darwin":
+                calendar_error = "macOS Calendar integration is only available on macOS"
+            else:
+                calendar_event_id, calendar_error = self._create_macos_calendar_event(
+                    title=reminder_title[:120],
+                    body=body[:500],
+                    remind_at=remind_at,
+                    calendar_name=str(
+                        metadata.get("macos_calendar_name")
+                        or self.settings.hachi_macos_calendar_name
+                        or "Hachi"
+                    ).strip()
+                    or "Hachi",
+                )
+
         return self.db.create_reminder(
             title=reminder_title[:120],
             body=body[:500],
             remind_at=remind_at.isoformat(),
             remind_at_epoch=remind_at.timestamp(),
             source_text=text[:4000],
+            calendar_event_id=calendar_event_id,
+            calendar_error=calendar_error,
         )
 
     def list_reminders(self, *, limit: int = 50, status: str | None = None) -> list[dict[str, Any]]:
@@ -104,6 +124,99 @@ class ReminderService:
         if sys.platform.startswith("linux"):
             subprocess.run(["notify-send", title, body], check=False, timeout=8)
             return
+
+    def _macos_calendar_requested(self, metadata: dict[str, Any]) -> bool:
+        if "macos_calendar" in metadata:
+            return self._truthy(metadata.get("macos_calendar"))
+        return bool(self.settings.hachi_enable_macos_calendar_reminders)
+
+    def _create_macos_calendar_event(
+        self,
+        *,
+        title: str,
+        body: str,
+        remind_at: datetime,
+        calendar_name: str,
+    ) -> tuple[str | None, str | None]:
+        script = """
+on run argv
+  set calendarName to item 1 of argv
+  set eventTitle to item 2 of argv
+  set eventBody to item 3 of argv
+  set eventYear to item 4 of argv as integer
+  set eventMonthIndex to item 5 of argv as integer
+  set eventDay to item 6 of argv as integer
+  set eventHour to item 7 of argv as integer
+  set eventMinute to item 8 of argv as integer
+  set durationMinutes to item 9 of argv as integer
+  set monthValues to {January, February, March, April, May, June, July, August, September, October, November, December}
+
+  tell application "Calendar"
+    set targetCalendar to missing value
+    repeat with oneCalendar in calendars
+      if name of oneCalendar is calendarName then
+        set targetCalendar to oneCalendar
+        exit repeat
+      end if
+    end repeat
+
+    if targetCalendar is missing value then
+      set targetCalendar to make new calendar with properties {name:calendarName}
+    end if
+
+    set startDate to current date
+    set year of startDate to eventYear
+    set month of startDate to item eventMonthIndex of monthValues
+    set day of startDate to eventDay
+    set time of startDate to (eventHour * 3600 + eventMinute * 60)
+    set endDate to startDate + (durationMinutes * 60)
+
+    set newEvent to make new event at end of events of targetCalendar with properties {summary:eventTitle, description:eventBody, start date:startDate, end date:endDate}
+    make new display alarm at end of display alarms of newEvent with properties {trigger interval:0}
+    return uid of newEvent
+  end tell
+end run
+"""
+        local_time = remind_at.astimezone()
+        duration = max(1, int(self.settings.hachi_macos_calendar_event_duration_minutes))
+        args = [
+            "osascript",
+            "-e",
+            script,
+            calendar_name,
+            title,
+            body,
+            str(local_time.year),
+            str(local_time.month),
+            str(local_time.day),
+            str(local_time.hour),
+            str(local_time.minute),
+            str(duration),
+        ]
+        try:
+            completed = subprocess.run(
+                args,
+                check=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=15,
+            )
+        except FileNotFoundError:
+            return None, "osascript is not available"
+        except subprocess.TimeoutExpired:
+            return None, "Timed out while creating macOS Calendar event"
+
+        if completed.returncode != 0:
+            return None, (completed.stderr or completed.stdout or "Calendar event creation failed").strip()
+        return (completed.stdout or "").strip() or None, None
+
+    def _truthy(self, value: Any) -> bool:
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (int, float)):
+            return value != 0
+        return str(value).strip().lower() in {"1", "true", "yes", "on", "y"}
 
     def _resolve_remind_at(self, *, text: str, metadata: dict[str, Any]) -> datetime:
         raw = str(metadata.get("reminder_at") or metadata.get("remind_at") or "").strip()

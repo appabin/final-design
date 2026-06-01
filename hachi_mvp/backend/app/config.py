@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     milvus_uri: str = "./data/milvus_lite.db"
     milvus_collection: str = "hachi_chunks"
     workspace_path: str = "./workspace"
+    thesis_images_path: str = ""
 
     embedding_base_url: str = ""
     embedding_api_key: str = ""
@@ -32,9 +33,17 @@ class Settings(BaseSettings):
     glm5_router_api_key: str = ""
     glm5_router_model: str = "glm-5"
 
+    router_base_url: str = ""
+    router_api_key: str = ""
+    router_model: str = ""
+
     qwen_answer_base_url: str = ""
     qwen_answer_api_key: str = ""
     qwen_answer_model: str = "qwen3.5-plus"
+
+    answer_base_url: str = ""
+    answer_api_key: str = ""
+    answer_model: str = ""
 
     tavily_api_key: str = ""
 
@@ -47,15 +56,46 @@ class Settings(BaseSettings):
     memory_max_tokens: int = 2500
 
     hachi_enable_desktop_notifications: bool = True
+    hachi_enable_macos_calendar_reminders: bool = False
+    hachi_macos_calendar_name: str = "Hachi"
+    hachi_macos_calendar_event_duration_minutes: int = 15
     reminder_poll_interval_seconds: float = 15.0
 
     @property
     def role_bindings(self) -> dict[str, str]:
         return {
-            "router": self.glm5_router_model,
-            "answer": self.qwen_answer_model,
+            "router": self.resolved_router_model,
+            "answer": self.resolved_answer_model,
             "embedding": self.embedding_model,
         }
+
+    @property
+    def resolved_router_base_url(self) -> str:
+        return self.router_base_url or self.glm5_router_base_url
+
+    @property
+    def resolved_router_api_key(self) -> str:
+        if self.router_base_url or self.router_model:
+            return self.router_api_key
+        return self.router_api_key or self.glm5_router_api_key
+
+    @property
+    def resolved_router_model(self) -> str:
+        return self.router_model or self.glm5_router_model
+
+    @property
+    def resolved_answer_base_url(self) -> str:
+        return self.answer_base_url or self.qwen_answer_base_url
+
+    @property
+    def resolved_answer_api_key(self) -> str:
+        if self.answer_base_url or self.answer_model:
+            return self.answer_api_key or self.router_api_key
+        return self.answer_api_key or self.qwen_answer_api_key
+
+    @property
+    def resolved_answer_model(self) -> str:
+        return self.answer_model or self.qwen_answer_model
 
     def ensure_data_paths(self) -> None:
         base_dir = Path(__file__).resolve().parents[1]

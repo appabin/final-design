@@ -66,7 +66,7 @@ class AgentTools:
             "include_answer": False,
         }
         timeout = httpx.Timeout(20.0, connect=10.0)
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        async with httpx.AsyncClient(timeout=timeout, trust_env=False) as client:
             response = await client.post("https://api.tavily.com/search", json=payload)
             response.raise_for_status()
             data = response.json()

@@ -12,41 +12,28 @@
   小五: 9pt,
 )
 
-// Windows fonts from the original template are used first. In particular,
-// Windows 宋体 is identified by Typst as "SimSun".
-#let FontEnglish = (
-  (name: "Times New Roman", covers: "latin-in-cjk"),
-  (name: "STIX Two Text", covers: "latin-in-cjk"),
-)
+// #let FONTSET = (
+//   Hei: "SimHei", // ("Inter", "Noto Sans CJK SC"),
+//   Song: "SimSun", // "Noto Serif CJK SC",
+//   Kai: "KaiTi", // "FZKai-Z03",
+//   English: "Times New Roman", // "STIX Two Text",
+// )
 
-#let FontHeiCN = (
-  "SimHei",
-  "Microsoft YaHei",
-  "Noto Sans CJK SC",
-  "Heiti SC",
-)
+#let FontEnglish = (name: "Times New Roman", covers: "latin-in-cjk")
+
+#let FontHeiCN = "SimHei"
 #let FontHei = (
-  (name: "Times New Roman", covers: "latin-in-cjk"),
-  (name: "STIX Two Text", covers: "latin-in-cjk"),
+  FontEnglish,
   "SimHei",
-  "Microsoft YaHei",
-  "Noto Sans CJK SC",
-  "Heiti SC",
 )
 #let FontSongCN = "SimSun"
 #let FontSong = (
-  (name: "Times New Roman", covers: "latin-in-cjk"),
-  (name: "STIX Two Text", covers: "latin-in-cjk"),
-  "SimSun",
-  "Noto Serif CJK SC",
-  "Songti SC",
+  FontEnglish,
+  FontSongCN,
 )
 #let FontKai = (
-  (name: "Times New Roman", covers: "latin-in-cjk"),
-  (name: "STIX Two Text", covers: "latin-in-cjk"),
+  FontEnglish,
   "KaiTi",
-  "FZKai-Z03",
-  "FZKTK",
 )
 
 #let tableCounter = counter("Table")
@@ -117,14 +104,6 @@
       let chapter = counter(heading).at(loc).first()
       let eq-num = equationCounter.at(loc).first()
       link(loc)[式 #chapter\-#eq-num]
-    } else if el != none and el.func() == heading {
-      let numbers = counter(heading).at(el.location())
-      h(0em, weak: true)
-      link(el.location())[
-        #numbering(el.numbering, ..numbers)
-      ]
-      if numbers.len() != 1 [节]
-      h(0em, weak: true)
     } else {
       it
     }
@@ -162,7 +141,7 @@
     h(2em) + "关键词" + h(0.5em),
   )
   text(size: FONTSIZE.小四, keywordsZH.join(h(1em)))
-  pagebreak(weak: true)
+  pagebreak(to: "odd", weak: true)
 
   // 英文摘要
   align(center)[
@@ -188,7 +167,7 @@
     h(1em) + value
   })
 
-  pagebreak(weak: true)
+  pagebreak(to: "odd", weak: true)
 
   // 标题样式
   set heading(numbering: numbly(
@@ -199,7 +178,7 @@
   ))
   show heading: it => {
     if it.level == 1 {
-      pagebreak(weak: true) // 大标题换页，不强制奇数页，避免生成空白偶数页
+      pagebreak(to: "odd", weak: true) // 大标题奇数页
       tableCounter.update(1)
       figureCounter.update(1)
       equationCounter.update(1)
@@ -513,7 +492,7 @@
     )
   }
   body
-  // 不额外补最后的空页。
+  pagebreak(to: "odd", weak: true) // 最后的空页
 }
 
 #let cite-inline(key) = cite(key, style: "numeric-inline.csl")

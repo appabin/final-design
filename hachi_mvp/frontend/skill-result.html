@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hachi Skill 结果</title>
+  <style>
+    :root {
+      --bg: #eef1f6;
+      --panel: rgba(255, 255, 255, 0.9);
+      --panel-strong: #ffffff;
+      --line: #d8deea;
+      --ink: #1a2238;
+      --muted: #5d6987;
+      --brand: #1f5eff;
+      --brand-soft: #e7eeff;
+      --ok: #0f8f61;
+      --warn: #b85f00;
+      --danger: #c03333;
+      --shadow: 0 20px 40px rgba(18, 28, 46, 0.08);
+      --r-lg: 18px;
+      --r-md: 14px;
+      --r-sm: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      font-family: "Avenir Next", "PingFang SC", "Noto Sans SC", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(1200px 500px at 10% -10%, #deebff 0%, transparent 58%),
+        radial-gradient(900px 460px at 95% 4%, #dff8f2 0%, transparent 55%),
+        var(--bg);
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .topbar,
+    .panel {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-radius: 20px;
+      padding: 14px 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #102042 0%, #1f5eff 100%);
+      color: #fff;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+      flex: 0 0 auto;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 22px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 999px;
+      cursor: pointer;
+      padding: 8px 13px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #1f5eff 0%, #1d49c4 100%);
+      color: #fff;
+    }
+
+    .btn-soft {
+      background: #eef3ff;
+      color: #23498b;
+      border: 1px solid #d4e0fb;
+    }
+
+    .workspace {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .panel {
+      border-radius: 22px;
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid #e5eaf4;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 19px;
+    }
+
+    .panel-head small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+    }
+
+    .panel-body {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .section {
+      background: var(--panel-strong);
+      border: 1px solid #e3e8f1;
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .section h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 5px 9px;
+      background: var(--brand-soft);
+      color: #23498b;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .content {
+      line-height: 1.72;
+      color: #293754;
+      font-size: 15px;
+      word-break: break-word;
+    }
+
+    .content h1,
+    .content h2,
+    .content h3 {
+      color: #18243c;
+      margin: 18px 0 8px;
+      line-height: 1.35;
+    }
+
+    .content h1 {
+      font-size: 22px;
+    }
+
+    .content h2 {
+      font-size: 18px;
+    }
+
+    .content h3 {
+      font-size: 16px;
+    }
+
+    .content p {
+      margin: 8px 0;
+    }
+
+    .content ul {
+      margin: 8px 0 8px 20px;
+      padding: 0;
+    }
+
+    .content li {
+      margin: 4px 0;
+    }
+
+    .content code {
+      border-radius: 6px;
+      background: #eef3ff;
+      padding: 1px 5px;
+      color: #23498b;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.92em;
+    }
+
+    .quiz-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .quiz-card {
+      border: 1px solid #dde4f1;
+      border-radius: 16px;
+      background: #fbfdff;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .quiz-card h3 {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .option-list {
+      display: grid;
+      gap: 7px;
+    }
+
+    .option {
+      border: 1px solid #dfe6f2;
+      border-radius: 12px;
+      padding: 9px 10px;
+      background: #ffffff;
+      cursor: pointer;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .option input {
+      margin-top: 3px;
+      flex: 0 0 auto;
+    }
+
+    textarea {
+      width: 100%;
+      border: 1px solid #d7deeb;
+      background: #fcfdff;
+      color: var(--ink);
+      border-radius: var(--r-sm);
+      padding: 9px 10px;
+      outline: none;
+      min-height: 110px;
+      resize: vertical;
+      font: inherit;
+      line-height: 1.55;
+    }
+
+    textarea:focus {
+      border-color: #6f90ff;
+      box-shadow: 0 0 0 3px #dce6ff;
+    }
+
+    .answer-box {
+      display: none;
+      border-top: 1px dashed #d8deea;
+      padding-top: 10px;
+      color: #344461;
+      line-height: 1.6;
+    }
+
+    .answered .answer-box {
+      display: block;
+    }
+
+    .result-ok {
+      color: var(--ok);
+      font-weight: 700;
+    }
+
+    .result-bad {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .quiz-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+
+    .summary-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .summary-item {
+      border: 1px solid #e3e8f1;
+      border-radius: 14px;
+      background: #f9fbff;
+      padding: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .summary-item b {
+      display: block;
+      color: #1c2a45;
+      margin-bottom: 4px;
+    }
+
+    .empty {
+      border: 1px dashed #cdd7e8;
+      border-radius: 16px;
+      padding: 18px;
+      color: var(--muted);
+      background: #fbfdff;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 900px) {
+      .app-shell {
+        padding: 10px;
+      }
+
+      .topbar,
+      .workspace {
+        display: block;
+      }
+
+      .top-actions {
+        margin-top: 12px;
+        justify-content: flex-start;
+      }
+
+      .panel {
+        margin-top: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">H</div>
+        <div>
+          <h1 id="pageTitle">Skill 结果</h1>
+          <p id="pageSubtitle">从 Hachi 工作台生成的结果页</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <a class="btn btn-soft" href="/">返回工作台</a>
+        <button class="btn btn-soft" id="clearBtn" type="button">清除本页缓存</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2 id="resultTitle">结果</h2>
+            <small id="resultMeta">等待载入</small>
+          </div>
+          <span class="status" id="resultStatus">Skill</span>
+        </div>
+        <div class="panel-body" id="mainContent"></div>
+      </section>
+
+      <aside class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>结果信息</h2>
+            <small>输入、类型和操作状态</small>
+          </div>
+        </div>
+        <div class="panel-body">
+          <section class="section">
+            <h3>来源输入</h3>
+            <div class="muted" id="inputPreview">暂无</div>
+          </section>
+          <section class="section">
+            <h3>执行信息</h3>
+            <div class="summary-grid" id="metaGrid"></div>
+          </section>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const params = new URLSearchParams(window.location.search);
+    const storageKey = params.get("key") || "";
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function formatDate(value) {
+      if (!value) return "-";
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+    }
+
+    function inlineMarkdown(value) {
+      return escapeHtml(value)
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    }
+
+    function markdownToHtml(markdown) {
+      const lines = String(markdown || "").replace(/\r/g, "").split("\n");
+      const html = [];
+      let listOpen = false;
+
+      const closeList = () => {
+        if (listOpen) {
+          html.push("</ul>");
+          listOpen = false;
+        }
+      };
+
+      lines.forEach((line) => {
+        const text = line.trim();
+        if (!text) {
+          closeList();
+          return;
+        }
+
+        const heading = text.match(/^(#{1,3})\s+(.+)$/);
+        if (heading) {
+          closeList();
+          const level = heading[1].length;
+          html.push(`<h${level}>${inlineMarkdown(heading[2])}</h${level}>`);
+          return;
+        }
+
+        const bullet = text.match(/^[-*+]\s+(.+)$/);
+        if (bullet) {
+          if (!listOpen) {
+            html.push("<ul>");
+            listOpen = true;
+          }
+          html.push(`<li>${inlineMarkdown(bullet[1])}</li>`);
+          return;
+        }
+
+        closeList();
+        html.push(`<p>${inlineMarkdown(text)}</p>`);
+      });
+
+      closeList();
+      return html.join("");
+    }
+
+    function loadPayload() {
+      if (!storageKey) return null;
+      try {
+        const raw = localStorage.getItem(storageKey);
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function parseQuiz(markdown) {
+      const lines = String(markdown || "").replace(/\r/g, "").split("\n");
+      const questions = [];
+      const answers = new Map();
+      let section = "";
+      let current = null;
+
+      const pushCurrent = () => {
+        if (!current) return;
+        current.prompt = current.prompt.trim();
+        current.answer = (current.answer || answers.get(current.number) || "").trim();
+        if (!current.type) current.type = current.options.length >= 2 ? "choice" : "short";
+        questions.push(current);
+        current = null;
+      };
+
+      lines.forEach((rawLine) => {
+        const line = rawLine.trim();
+        if (!line) return;
+
+        if (/参考答案|答案解析|评分建议/.test(line) && !/^(\d+)[.、)]/.test(line)) {
+          pushCurrent();
+          section = "answers";
+          return;
+        }
+        if (/选择题/.test(line)) {
+          pushCurrent();
+          section = "choice";
+          return;
+        }
+        if (/简答题|问答题/.test(line)) {
+          pushCurrent();
+          section = "short";
+          return;
+        }
+
+        if (section === "answers") {
+          const answerMatch = line.match(/^(\d+)[.、)]\s*(?:答案|参考答案|正确答案)?[:：]?\s*(.+)$/);
+          if (answerMatch) answers.set(answerMatch[1], answerMatch[2]);
+          return;
+        }
+
+        const questionMatch = line.match(/^(?:[-*]\s*)?(\d+)[.、)]\s*(.+)$/);
+        if (questionMatch) {
+          pushCurrent();
+          current = {
+            number: questionMatch[1],
+            prompt: questionMatch[2],
+            type: section === "short" ? "short" : "",
+            options: [],
+            answer: "",
+          };
+          return;
+        }
+
+        const optionMatch = line.match(/^(?:[-*]\s*)?([A-D])[\.\、\)]\s*(.+)$/i);
+        if (current && optionMatch) {
+          current.type = "choice";
+          current.options.push({
+            key: optionMatch[1].toUpperCase(),
+            text: optionMatch[2],
+          });
+          return;
+        }
+
+        const inlineAnswer = line.match(/^(?:答案|参考答案|正确答案)[:：]\s*(.+)$/);
+        if (current && inlineAnswer) {
+          current.answer = inlineAnswer[1];
+          return;
+        }
+
+        if (current) {
+          current.prompt += ` ${line}`;
+        }
+      });
+
+      pushCurrent();
+      questions.forEach((question) => {
+        if (!question.answer && answers.has(question.number)) question.answer = answers.get(question.number);
+      });
+      return questions.filter((question) => question.prompt);
+    }
+
+    function renderQuiz(payload) {
+      const questions = parseQuiz(payload.result || "");
+      if (!questions.length) {
+        $("mainContent").innerHTML = `
+          <section class="section">
+            <h3>检测题结果</h3>
+            <div class="empty">没有解析出可交互的题目，下面展示原始结果。</div>
+            <div class="content">${markdownToHtml(payload.result || "")}</div>
+          </section>
+        `;
+        return;
+      }
+
+      const quizHtml = questions.map((question, index) => {
+        const answerText = question.answer || "暂无参考答案。";
+        if (question.type === "choice" && question.options.length) {
+          const options = question.options.map((option) => `
+            <label class="option">
+              <input type="radio" name="q-${index}" value="${escapeHtml(option.key)}" />
+              <span><b>${escapeHtml(option.key)}.</b> ${escapeHtml(option.text)}</span>
+            </label>
+          `).join("");
+          return `
+            <article class="quiz-card" data-question-index="${index}" data-type="choice" data-answer="${escapeHtml(answerText)}">
+              <h3>${index + 1}. ${escapeHtml(question.prompt)}</h3>
+              <div class="option-list">${options}</div>
+              <div class="answer-box"></div>
+            </article>
+          `;
+        }
+
+        return `
+          <article class="quiz-card" data-question-index="${index}" data-type="short" data-answer="${escapeHtml(answerText)}">
+            <h3>${index + 1}. ${escapeHtml(question.prompt)}</h3>
+            <textarea placeholder="在这里写下你的答案，提交后再对照参考答案。"></textarea>
+            <div class="answer-box"></div>
+          </article>
+        `;
+      }).join("");
+
+      $("mainContent").innerHTML = `
+        <section class="section">
+          <h3>完成检测题</h3>
+          <div class="muted">先作答，再提交查看选择题判定和简答题参考答案。</div>
+          <div class="quiz-actions">
+            <button class="btn btn-primary" id="submitQuizBtn" type="button">提交并查看结果</button>
+            <button class="btn btn-soft" id="resetQuizBtn" type="button">重新作答</button>
+          </div>
+        </section>
+        <div class="quiz-list">${quizHtml}</div>
+      `;
+
+      $("submitQuizBtn").addEventListener("click", submitQuiz);
+      $("resetQuizBtn").addEventListener("click", () => {
+        document.querySelectorAll(".quiz-card").forEach((card) => {
+          card.classList.remove("answered");
+          const box = card.querySelector(".answer-box");
+          if (box) box.innerHTML = "";
+          card.querySelectorAll("input[type='radio']").forEach((input) => {
+            input.checked = false;
+          });
+          const textarea = card.querySelector("textarea");
+          if (textarea) textarea.value = "";
+        });
+      });
+    }
+
+    function submitQuiz() {
+      let choiceTotal = 0;
+      let choiceCorrect = 0;
+      let shortAnswered = 0;
+      let shortTotal = 0;
+
+      document.querySelectorAll(".quiz-card").forEach((card) => {
+        card.classList.add("answered");
+        const type = card.dataset.type;
+        const answer = card.dataset.answer || "暂无参考答案。";
+        const box = card.querySelector(".answer-box");
+
+        if (type === "choice") {
+          choiceTotal += 1;
+          const selected = card.querySelector("input[type='radio']:checked");
+          const expected = (answer.match(/[A-D]/i) || [""])[0].toUpperCase();
+          const value = selected ? selected.value.toUpperCase() : "";
+          const correct = expected && value === expected;
+          if (correct) choiceCorrect += 1;
+          box.innerHTML = `
+            <div class="${correct ? "result-ok" : "result-bad"}">
+              ${correct ? "回答正确" : value ? "需要再看一下" : "未选择答案"}
+            </div>
+            <div>你的答案：${escapeHtml(value || "未作答")}</div>
+            <div>参考答案：${escapeHtml(answer)}</div>
+          `;
+          return;
+        }
+
+        shortTotal += 1;
+        const textarea = card.querySelector("textarea");
+        const userAnswer = textarea ? textarea.value.trim() : "";
+        if (userAnswer) shortAnswered += 1;
+        box.innerHTML = `
+          <div><b>你的答案：</b>${escapeHtml(userAnswer || "未作答")}</div>
+          <div><b>参考答案：</b>${escapeHtml(answer)}</div>
+        `;
+      });
+
+      $("resultStatus").textContent = `选择题 ${choiceCorrect}/${choiceTotal}`;
+      $("resultMeta").textContent = `已提交：选择题 ${choiceCorrect}/${choiceTotal} 正确，简答题 ${shortAnswered}/${shortTotal} 已作答`;
+    }
+
+    function renderDocument(payload) {
+      $("mainContent").innerHTML = `
+        <section class="section">
+          <h3>${escapeHtml(payload.title || "Skill 结果")}</h3>
+          <div class="content">${markdownToHtml(payload.result || "")}</div>
+        </section>
+      `;
+    }
+
+    function renderMeta(payload) {
+      const input = String(payload.input_text || "").trim();
+      $("inputPreview").textContent = input ? input.slice(0, 500) : "暂无输入记录";
+      $("metaGrid").innerHTML = [
+        ["Skill", payload.skill_id || "-"],
+        ["标题", payload.title || "-"],
+        ["生成时间", formatDate(payload.created_at)],
+        ["结果长度", `${String(payload.result || "").length} 字符`],
+      ].map(([label, value]) => `
+        <div class="summary-item">
+          <b>${escapeHtml(label)}</b>
+          <span>${escapeHtml(value)}</span>
+        </div>
+      `).join("");
+    }
+
+    function render() {
+      const payload = loadPayload();
+      if (!payload) {
+        $("mainContent").innerHTML = `
+          <div class="empty">
+            没有找到这次 Skill 结果。请回到 Hachi 工作台重新运行 Skill，或确认当前页面没有被清除浏览器缓存。
+          </div>
+        `;
+        $("resultMeta").textContent = "未找到本地结果";
+        return;
+      }
+
+      $("pageTitle").textContent = payload.title || "Skill 结果";
+      $("resultTitle").textContent = payload.title || "Skill 结果";
+      $("resultMeta").textContent = `生成时间：${formatDate(payload.created_at)}`;
+      $("resultStatus").textContent = payload.skill_id === "quiz" ? "答题模式" : "结果展示";
+      renderMeta(payload);
+
+      if (payload.skill_id === "quiz") {
+        renderQuiz(payload);
+      } else {
+        renderDocument(payload);
+      }
+    }
+
+    $("clearBtn").addEventListener("click", () => {
+      if (storageKey) localStorage.removeItem(storageKey);
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

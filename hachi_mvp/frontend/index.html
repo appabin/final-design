@@ -27,6 +27,11 @@
       box-sizing: border-box;
     }
 
+    html,
+    body {
+      height: 100%;
+    }
+
     body {
       margin: 0;
       color: var(--ink);
@@ -35,12 +40,14 @@
         radial-gradient(1200px 500px at 10% -10%, #deebff 0%, transparent 58%),
         radial-gradient(900px 460px at 95% 4%, #dff8f2 0%, transparent 55%),
         var(--bg);
+      overflow: hidden;
     }
 
     .app-shell {
-      min-height: 100vh;
+      height: 100vh;
+      min-height: 0;
       display: grid;
-      grid-template-rows: auto 1fr;
+      grid-template-rows: auto minmax(0, 1fr);
       gap: 14px;
       padding: 14px;
     }
@@ -142,9 +149,29 @@
     }
 
     .panel-scroll {
+      flex: 1;
       min-height: 0;
       overflow: auto;
       padding: 14px;
+    }
+
+    .source-panel-scroll {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .source-panel-scroll > .section:first-child {
+      flex: 0 0 auto;
+    }
+
+    .source-library-section {
+      flex: 1 1 auto;
+      min-height: 180px;
+      margin-bottom: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     .section {
@@ -268,8 +295,12 @@
     }
 
     .source-list {
+      flex: 1 1 auto;
       display: grid;
       gap: 8px;
+      min-height: 0;
+      overflow: auto;
+      padding-right: 2px;
     }
 
     .source-item {
@@ -302,6 +333,21 @@
       font-size: 11px;
     }
 
+    .source-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .source-delete {
+      border: 1px solid #f0c7c7;
+      background: #fff2f2;
+      color: var(--danger);
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
     .dot {
       width: 6px;
       height: 6px;
@@ -323,43 +369,50 @@
       flex: 1;
       min-height: 0;
       overflow: auto;
-      padding: 12px;
+      padding: 16px 14px;
       display: grid;
-      gap: 10px;
+      gap: 18px;
       align-content: start;
       background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(247, 250, 255, 0.82));
     }
 
     .msg {
-      max-width: min(860px, 92%);
-      border-radius: 18px;
+      width: fit-content;
+      max-width: min(720px, 82%);
+      border-radius: 14px;
       padding: 12px 14px;
       border: 1px solid #e1e8f5;
-      line-height: 1.55;
-      white-space: pre-wrap;
+      line-height: 1.45;
       word-break: break-word;
       animation: fade-up 220ms ease both;
+      font-size: 14px;
+      text-align: left;
     }
 
     .msg.user {
+      justify-self: end;
       margin-left: auto;
       background: #e9f0ff;
       border-color: #d1def9;
+      max-width: min(520px, 62%);
     }
 
     .msg.assistant {
+      justify-self: start;
       margin-right: auto;
       background: #ffffff;
+      max-width: min(680px, 76%);
     }
 
     .msg-meta {
       font-size: 11px;
       color: #60708f;
-      margin-top: 7px;
+      margin-top: 5px;
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+      line-height: 1.2;
     }
 
     .cite-chip {
@@ -374,23 +427,31 @@
 
     .chat-composer {
       border-top: 1px solid #e4e9f2;
-      padding: 14px;
+      padding: 10px 12px;
       display: grid;
-      gap: 10px;
+      gap: 8px;
       background: rgba(252, 253, 255, 0.9);
+    }
+
+    .chat-composer textarea {
+      min-height: 54px;
+      max-height: 110px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      line-height: 1.45;
     }
 
     .composer-controls {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
     }
 
     .checks {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
       color: #495978;
       font-size: 12px;
@@ -402,6 +463,11 @@
       gap: 5px;
       align-items: center;
       cursor: pointer;
+    }
+
+    #askBtn {
+      padding: 7px 14px;
+      min-width: 64px;
     }
 
     .studio-cards {
@@ -447,6 +513,34 @@
       word-break: break-word;
       max-height: 320px;
       overflow: auto;
+    }
+
+    .skill-artifact {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e2e8f3;
+      white-space: normal;
+    }
+
+    .skill-artifact a {
+      color: #1f5eff;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .skill-preview {
+      display: block;
+      margin-top: 8px;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .skill-preview strong {
+      color: #1c2a45;
     }
 
     .trace-list,
@@ -572,6 +666,15 @@
     }
 
     @media (max-width: 1220px) {
+      body {
+        overflow: auto;
+      }
+
+      .app-shell {
+        height: auto;
+        min-height: 100vh;
+      }
+
       .workspace {
         grid-template-columns: 1fr;
       }
@@ -592,6 +695,14 @@
 
       .panel {
         min-height: 420px;
+      }
+
+      .source-panel-scroll {
+        overflow: auto;
+      }
+
+      .source-library-section {
+        max-height: 420px;
       }
     }
 
@@ -624,7 +735,7 @@
           <h2>来源</h2>
           <small id="sourceCount">0 个</small>
         </div>
-        <div class="panel-scroll">
+        <div class="panel-scroll source-panel-scroll">
           <section class="section">
             <h3>添加来源</h3>
             <div class="tabs" id="ingestTabs">
@@ -670,7 +781,7 @@
             </div>
           </section>
 
-          <section class="section">
+          <section class="section source-library-section">
             <h3>知识库来源</h3>
             <input id="sourceFilter" class="source-filter" type="text" placeholder="搜索来源标题" />
             <div class="source-list" id="sourceList"></div>
@@ -722,6 +833,7 @@
             <div class="skill-custom">
               <label for="reminderAtInput">邮件提醒时间</label>
               <input id="reminderAtInput" type="datetime-local" />
+              <label><input id="syncMacCalendar" type="checkbox" checked /> 同步到 macOS 日历</label>
             </div>
             <div class="skill-custom">
               <label for="customSkillInput">自定义 Skill</label>
@@ -774,6 +886,7 @@
       messages: [],
       sources: [],
       lastResponse: null,
+      lastSkillOutput: null,
       sourceFilter: "",
     };
 
@@ -855,6 +968,7 @@
                 <span>片段: ${escapeHtml(String(item.chunks ?? 0))}</span>
                 <span>${escapeHtml(created)}</span>
               </div>
+              ${item.id ? `<div class="source-actions"><button class="source-delete" type="button" data-delete-doc-id="${escapeHtml(item.id)}">删除</button></div>` : ""}
             </article>
           `;
         })
@@ -864,13 +978,7 @@
     function renderChat() {
       const thread = $("chatThread");
       if (!state.messages.length) {
-        thread.innerHTML = `
-          <div class="msg assistant">
-            你好，我是 Hachi 知识助手。你可以先在左侧导入资料，再在这里提问。<br>
-            你可以直接提问，系统会结合知识库内容给出带引用的回答。
-            <div class="msg-meta">提示：对时效性问题可开启联网搜索。</div>
-          </div>
-        `;
+        thread.innerHTML = '<div class="msg assistant">你好，我是 Hachi 知识助手。你可以先在左侧导入资料，再在这里提问。<br>你可以直接提问，系统会结合知识库内容给出带引用的回答。<div class="msg-meta">提示：对时效性问题可开启联网搜索。</div></div>';
         return;
       }
 
@@ -888,16 +996,12 @@
             })
             .join("");
 
-          return `
-            <div class="msg ${msg.role}">
-              ${escapeHtml(msg.content).replaceAll("\n", "<br>")}
-              <div class="msg-meta">
-                <span>${msg.role === "user" ? "你" : "Hachi"}</span>
-                ${msg.time ? `<span>${escapeHtml(msg.time)}</span>` : ""}
-                ${citeHtml}
-              </div>
-            </div>
-          `;
+          const meta = [
+            `<span>${msg.role === "user" ? "你" : "Hachi"}</span>`,
+            msg.time ? `<span>${escapeHtml(msg.time)}</span>` : "",
+            citeHtml,
+          ].filter(Boolean).join("");
+          return `<div class="msg ${msg.role}">${escapeHtml(msg.content).replaceAll("\n", "<br>")}<div class="msg-meta">${meta}</div></div>`;
         })
         .join("");
 
@@ -993,10 +1097,15 @@
       holder.innerHTML = reminders
         .map((item) => {
           const remindAt = item.remind_at ? new Date(item.remind_at).toLocaleString() : "-";
+          const calendarState = item.calendar_event_id
+            ? " · 已同步日历"
+            : item.calendar_error
+              ? " · 日历同步失败"
+              : "";
           return `
             <div class="reminder-item">
               <b>${escapeHtml(item.title || "邮件提醒")}</b>
-              <div class="muted" style="margin:4px 0;">${escapeHtml(remindAt)} · ${escapeHtml(item.status || "pending")}</div>
+              <div class="muted" style="margin:4px 0;">${escapeHtml(remindAt)} · ${escapeHtml(item.status || "pending")}${escapeHtml(calendarState)}</div>
               <div>${escapeHtml(item.body || "").slice(0, 180)}</div>
             </div>
           `;
@@ -1032,6 +1141,37 @@
       return $("questionInput").value.trim();
     }
 
+    function persistSkillResult(data, inputText) {
+      const key = `hachi-skill-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      const payload = {
+        ...data,
+        input_text: inputText,
+        created_at: new Date().toISOString(),
+      };
+      localStorage.setItem(key, JSON.stringify(payload));
+
+      const keys = Object.keys(localStorage)
+        .filter((itemKey) => itemKey.startsWith("hachi-skill-"))
+        .sort();
+      keys.slice(0, Math.max(0, keys.length - 20)).forEach((itemKey) => localStorage.removeItem(itemKey));
+      return key;
+    }
+
+    function renderSkillResultLink(data, resultUrl, opened) {
+      const preview = String(data.result || "").trim().slice(0, 260) || "Skill 已完成，打开新页面查看结果。";
+      const openedText = opened ? "已打开新页面" : "浏览器可能拦截了自动打开，请点击进入";
+      return `
+        <div class="skill-artifact">
+          <a id="skillResultLink" href="${escapeHtml(resultUrl)}" target="_blank" rel="noreferrer">打开结果页</a>
+          <span class="muted">${escapeHtml(openedText)}</span>
+        </div>
+        <a class="skill-preview" href="${escapeHtml(resultUrl)}" target="_blank" rel="noreferrer">
+          <strong>${escapeHtml(data.title || "Skill 结果")}</strong>
+          <div>${escapeHtml(preview)}</div>
+        </a>
+      `;
+    }
+
     async function runSkill(skillId, button, customInstruction = "") {
       const inputText = getSkillInputText(skillId);
       if (!inputText) {
@@ -1047,6 +1187,7 @@
           return;
         }
         metadata.reminder_at = new Date(reminderAt).toISOString();
+        metadata.macos_calendar = $("syncMacCalendar").checked;
       }
 
       const done = withLoading(button, "运行中...");
@@ -1068,17 +1209,36 @@
           body: JSON.stringify(payload),
         });
 
-        $("skillResult").textContent = `# ${data.title}\n\n${data.result || ""}`;
+        state.lastSkillOutput = data;
+        const resultKey = persistSkillResult(data, inputText);
+        const resultUrl = `/tools/skill-result?key=${encodeURIComponent(resultKey)}`;
+        const opened = window.open(resultUrl, "_blank");
+        if (opened) opened.opener = null;
+        $("skillResult").innerHTML = renderSkillResultLink(data, resultUrl, Boolean(opened));
         $("rawOutput").textContent = JSON.stringify(data, null, 2);
         if (skillId === "email_reminder") {
           await refreshReminders();
         }
-        setStatus("Skill 完成", "ok");
+        setStatus(opened ? "Skill 完成，已打开结果页" : "Skill 完成，请点击打开结果页", "ok");
       } catch (error) {
         setStatus(String(error.message || error), "err");
       } finally {
         done();
       }
+    }
+
+    async function deleteKnowledge(docId, askConfirm = true) {
+      const item = state.sources.find((source) => String(source.id) === String(docId));
+      const label = item ? item.title || docId : docId;
+      if (askConfirm && !window.confirm(`确认删除知识来源“${label}”？`)) return;
+
+      setStatus("正在删除知识...");
+      const data = await requestJson(`/api/knowledge/${encodeURIComponent(docId)}`, {
+        method: "DELETE",
+      });
+      $("rawOutput").textContent = JSON.stringify(data, null, 2);
+      await refreshSources();
+      setStatus(`已删除: ${data.title || docId}`, "ok");
     }
 
     async function refreshSources() {
@@ -1287,6 +1447,11 @@
         refreshReminders()
           .then(() => setStatus("提醒已刷新", "ok"))
           .catch((error) => setStatus(String(error.message || error), "err"));
+      });
+      $("sourceList").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-delete-doc-id]");
+        if (!button) return;
+        deleteKnowledge(button.dataset.deleteDocId).catch((error) => setStatus(String(error.message || error), "err"));
       });
 
       $("sourceFilter").addEventListener("input", (event) => {

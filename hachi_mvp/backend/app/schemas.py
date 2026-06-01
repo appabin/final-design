@@ -64,6 +64,8 @@ class SkillRunResponse(BaseModel):
     skill_id: str
     title: str
     result: str
+    markdown_path: Optional[str] = None
+    markdown_url: Optional[str] = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -76,6 +78,8 @@ class ReminderResponse(BaseModel):
     created_at: str
     fired_at: Optional[str] = None
     source_text: str = ""
+    calendar_event_id: Optional[str] = None
+    calendar_error: Optional[str] = None
 
 
 class KnowledgeTextRequest(BaseModel):
@@ -109,6 +113,27 @@ class KnowledgeIngestResponse(BaseModel):
     source_type: Literal["text", "url", "pdf", "screenshot"]
     chunks: int
     deduplicated: bool
+
+
+class KnowledgeDeleteResponse(BaseModel):
+    doc_id: str
+    title: str
+    deleted: bool
+    chunks_deleted: int
+
+
+class ThesisImageSaveRequest(BaseModel):
+    image_data_url: str = Field(..., min_length=32)
+    name: Optional[str] = None
+    caption: Optional[str] = None
+    overwrite: bool = False
+
+
+class ThesisImageSaveResponse(BaseModel):
+    file_name: str
+    path: str
+    relative_path: str
+    typst_snippet: str
 
 
 class ErrorResponse(BaseModel):

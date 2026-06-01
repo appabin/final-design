@@ -113,6 +113,24 @@ class KnowledgeService:
             content=text,
         )
 
+    def delete_document(self, doc_id: str) -> dict:
+        clean_doc_id = doc_id.strip()
+        if not clean_doc_id:
+            raise ValueError("doc_id is empty")
+
+        document = self.db.get_document(clean_doc_id)
+        if document is None:
+            raise FileNotFoundError(clean_doc_id)
+
+        self.vector_store.delete_doc(clean_doc_id)
+        chunks_deleted = self.db.delete_document(clean_doc_id)
+        return {
+            "doc_id": clean_doc_id,
+            "title": str(document["title"]),
+            "deleted": True,
+            "chunks_deleted": chunks_deleted,
+        }
+
     def _format_screenshot_analysis(
         self,
         *,

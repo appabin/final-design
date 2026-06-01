@@ -25,3 +25,23 @@ async def test_router_mock_decision_web_and_memory():
     assert plan["need_web_search"] is True
     assert plan["need_memory_compress"] is True
     assert plan["search_queries"]
+
+
+def test_deepseek_router_and_answer_bindings():
+    cfg = Settings(
+        _env_file=None,
+        router_base_url="https://api.deepseek.com",
+        router_api_key="sk-test",
+        router_model="deepseek-v4-flash",
+        answer_base_url="https://api.deepseek.com",
+        answer_model="deepseek-v4-flash",
+    )
+
+    assert cfg.resolved_router_base_url == "https://api.deepseek.com"
+    assert cfg.resolved_router_api_key == "sk-test"
+    assert cfg.resolved_router_model == "deepseek-v4-flash"
+    assert cfg.resolved_answer_base_url == "https://api.deepseek.com"
+    assert cfg.resolved_answer_api_key == "sk-test"
+    assert cfg.resolved_answer_model == "deepseek-v4-flash"
+    assert cfg.role_bindings["router"] == "deepseek-v4-flash"
+    assert cfg.role_bindings["answer"] == "deepseek-v4-flash"

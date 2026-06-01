@@ -200,8 +200,8 @@ class ModelGateway:
                 token_count=token_count,
             )
 
-        if not self.settings.glm5_router_base_url or not self.settings.glm5_router_api_key:
-            raise ValueError("GLM5 router configuration is missing")
+        if not self.settings.resolved_router_base_url or not self.settings.resolved_router_api_key:
+            raise ValueError("Router model configuration is missing")
 
         system = (
             "You are a routing and tool-selection agent. Decide whether to use web search, "
@@ -226,10 +226,10 @@ class ModelGateway:
             },
         }
 
-        raw = await self._dashscope_generation_completion(
-            base_url=self.settings.glm5_router_base_url,
-            api_key=self.settings.glm5_router_api_key,
-            model=self.settings.glm5_router_model,
+        raw = await self._router_chat_completion(
+            base_url=self.settings.resolved_router_base_url,
+            api_key=self.settings.resolved_router_api_key,
+            model=self.settings.resolved_router_model,
             messages=[
                 {"role": "system", "content": system},
                 {"role": "user", "content": json.dumps(user, ensure_ascii=False)},
@@ -251,8 +251,8 @@ class ModelGateway:
         if self.settings.hachi_mock_mode:
             return self._mock_memory_summary(messages)
 
-        if not self.settings.glm5_router_base_url or not self.settings.glm5_router_api_key:
-            raise ValueError("GLM5 router configuration is missing")
+        if not self.settings.resolved_router_base_url or not self.settings.resolved_router_api_key:
+            raise ValueError("Router model configuration is missing")
 
         system = (
             "Summarize chat memory into structured JSON. Keep only durable facts and decisions. "
@@ -271,10 +271,10 @@ class ModelGateway:
             },
         }
 
-        raw = await self._dashscope_generation_completion(
-            base_url=self.settings.glm5_router_base_url,
-            api_key=self.settings.glm5_router_api_key,
-            model=self.settings.glm5_router_model,
+        raw = await self._router_chat_completion(
+            base_url=self.settings.resolved_router_base_url,
+            api_key=self.settings.resolved_router_api_key,
+            model=self.settings.resolved_router_model,
             messages=[
                 {"role": "system", "content": system},
                 {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
@@ -300,7 +300,7 @@ class ModelGateway:
         if self.settings.hachi_mock_mode:
             return heuristic
 
-        if not self.settings.glm5_router_base_url or not self.settings.glm5_router_api_key:
+        if not self.settings.resolved_router_base_url or not self.settings.resolved_router_api_key:
             return heuristic
 
         system = (
@@ -339,10 +339,10 @@ class ModelGateway:
         }
 
         try:
-            raw = await self._dashscope_generation_completion(
-                base_url=self.settings.glm5_router_base_url,
-                api_key=self.settings.glm5_router_api_key,
-                model=self.settings.glm5_router_model,
+            raw = await self._router_chat_completion(
+                base_url=self.settings.resolved_router_base_url,
+                api_key=self.settings.resolved_router_api_key,
+                model=self.settings.resolved_router_model,
                 messages=[
                     {"role": "system", "content": system},
                     {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
@@ -421,9 +421,9 @@ class ModelGateway:
         }
 
         raw = await self._chat_completion(
-            base_url=self.settings.qwen_answer_base_url,
-            api_key=self.settings.qwen_answer_api_key,
-            model=self.settings.qwen_answer_model,
+            base_url=self.settings.resolved_answer_base_url,
+            api_key=self.settings.resolved_answer_api_key,
+            model=self.settings.resolved_answer_model,
             messages=[
                 {"role": "system", "content": system},
                 {"role": "user", "content": json.dumps(user, ensure_ascii=False)},
@@ -466,8 +466,8 @@ class ModelGateway:
                 "actions": [],
             }
 
-        if not self.settings.qwen_answer_base_url or not self.settings.qwen_answer_api_key:
-            raise ValueError("Qwen answer configuration is missing")
+        if not self.settings.resolved_answer_base_url or not self.settings.resolved_answer_api_key:
+            raise ValueError("Answer model configuration is missing")
 
         instruction = prompt or (
             "Analyze this browser screenshot for personal knowledge capture. "
@@ -541,8 +541,8 @@ class ModelGateway:
         if self.settings.hachi_mock_mode:
             return f"## {skill_title}\n\n{input_text[:240]}"
 
-        if not self.settings.qwen_answer_base_url or not self.settings.qwen_answer_api_key:
-            raise ValueError("Qwen answer configuration is missing")
+        if not self.settings.resolved_answer_base_url or not self.settings.resolved_answer_api_key:
+            raise ValueError("Answer model configuration is missing")
 
         system = (
             "You are executing a personal-assistant skill inside Hachi. "
@@ -555,9 +555,9 @@ class ModelGateway:
             "input_text": input_text,
         }
         return await self._chat_completion(
-            base_url=self.settings.qwen_answer_base_url,
-            api_key=self.settings.qwen_answer_api_key,
-            model=self.settings.qwen_answer_model,
+            base_url=self.settings.resolved_answer_base_url,
+            api_key=self.settings.resolved_answer_api_key,
+            model=self.settings.resolved_answer_model,
             messages=[
                 {"role": "system", "content": system},
                 {"role": "user", "content": json.dumps(user, ensure_ascii=False)},
@@ -613,6 +613,31 @@ class ModelGateway:
                 [str(item.get("text", "")) for item in content if isinstance(item, dict)]
             )
         return str(content)
+
+    async def _router_chat_completion(
+        self,
+        *,
+        base_url: str,
+        api_key: str,
+        model: str,
+        messages: list[dict[str, str]],
+        response_json: bool,
+        timeout: float,
+    ) -> str:
+        try:
+            return await asyncio.wait_for(
+                self._chat_completion(
+                    base_url=base_url,
+                    api_key=api_key,
+                    model=model,
+                    messages=messages,
+                    max_tokens=1200,
+                    response_json=response_json,
+                ),
+                timeout=timeout,
+            )
+        except asyncio.TimeoutError as exc:
+            raise ValueError("Upstream API timeout on router model call. Please retry.") from exc
 
     async def _dashscope_generation_completion(
         self,
@@ -686,7 +711,7 @@ class ModelGateway:
             "Content-Type": "application/json",
         }
         timeout = httpx.Timeout(90.0, connect=20.0)
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        async with httpx.AsyncClient(timeout=timeout, trust_env=False) as client:
             last_exc: Exception | None = None
             for attempt in range(2):
                 try:

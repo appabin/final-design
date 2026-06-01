@@ -27,6 +27,23 @@ python -m uvicorn app.main:app --reload --port 8008
 /Users/appa/Hachi_Assistant/hachi_mvp/scripts/milvus_remote.sh stop
 ```
 
+## DeepSeek Router example
+
+```env
+ROUTER_BASE_URL=https://api.deepseek.com
+ROUTER_API_KEY=sk-***
+ROUTER_MODEL=deepseek-v4-flash
+
+ANSWER_BASE_URL=https://api.deepseek.com
+ANSWER_API_KEY=
+ANSWER_MODEL=deepseek-v4-flash
+```
+
+`ROUTER_*` is used for pure-text routing, memory compression, and personalization signal analysis.
+`ANSWER_*` is used for pure-text answer composition and text skills; when `ANSWER_API_KEY` is empty,
+`ROUTER_API_KEY` is reused.
+Older `GLM5_ROUTER_*` settings are still supported as a fallback when `ROUTER_*` is not set.
+
 ## DashScope Embedding example
 
 ```env

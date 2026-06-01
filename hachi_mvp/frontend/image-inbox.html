@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>论文图片收集</title>
+  <style>
+    :root {
+      --bg: #eef1f6;
+      --panel: #ffffff;
+      --line: #d8deea;
+      --ink: #1a2238;
+      --muted: #5d6987;
+      --brand: #1f5eff;
+      --brand-soft: #e7eeff;
+      --ok: #0f8f61;
+      --danger: #c03333;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "Avenir Next", "PingFang SC", "Noto Sans SC", "Segoe UI", sans-serif;
+      background: var(--bg);
+    }
+
+    main {
+      width: min(1060px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 36px;
+      display: grid;
+      gap: 14px;
+    }
+
+    header,
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 22px;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .drop-zone {
+      min-height: 360px;
+      border: 2px dashed #b9c7df;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: #f8fbff;
+      color: var(--muted);
+      text-align: center;
+      padding: 16px;
+    }
+
+    .drop-zone.has-image {
+      border-style: solid;
+      background: #fff;
+      padding: 0;
+    }
+
+    .drop-zone img {
+      display: block;
+      max-width: 100%;
+      max-height: 68vh;
+      object-fit: contain;
+    }
+
+    .form {
+      display: grid;
+      gap: 10px;
+    }
+
+    label {
+      display: grid;
+      gap: 4px;
+      color: #40506f;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      border: 1px solid #d2dbea;
+      border-radius: 8px;
+      padding: 9px 10px;
+      color: var(--ink);
+      font: inherit;
+      outline: none;
+      background: #fcfdff;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 84px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    button,
+    .file-label {
+      border: 0;
+      border-radius: 999px;
+      padding: 9px 14px;
+      background: var(--brand);
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    button.secondary,
+    .file-label {
+      background: var(--brand-soft);
+      color: #244b8b;
+      border: 1px solid #cddaf5;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .status {
+      min-height: 20px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .status.ok {
+      color: var(--ok);
+    }
+
+    .status.err {
+      color: var(--danger);
+    }
+
+    pre {
+      margin: 0;
+      padding: 12px;
+      border-radius: 8px;
+      background: #111c30;
+      color: #d8e7ff;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.45;
+      min-height: 130px;
+    }
+
+    .result {
+      display: grid;
+      gap: 10px;
+    }
+
+    .result a {
+      color: var(--brand);
+      font-weight: 700;
+    }
+
+    @media (max-width: 860px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>论文图片收集</h1>
+      <p>在页面任意位置粘贴截图，填写文件名和图注后保存。图片会写入论文的 images 目录，并生成 Typst 代码。</p>
+    </header>
+
+    <div class="grid">
+      <section>
+        <div class="drop-zone" id="dropZone" tabindex="0">
+          <div>
+            <strong>点击这里后按 Cmd+V / Ctrl+V 粘贴截图</strong>
+            <p>也可以用右侧的“选择图片”。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="form">
+        <label>
+          文件名
+          <input id="nameInput" type="text" placeholder="例如：hachi-skill-markdown-output" />
+        </label>
+        <label>
+          图注
+          <textarea id="captionInput" placeholder="例如：Skill Markdown 输出文件截图"></textarea>
+        </label>
+        <label class="check">
+          <input id="overwriteInput" type="checkbox" />
+          允许覆盖同名文件
+        </label>
+        <div class="row">
+          <label class="file-label" for="fileInput">选择图片</label>
+          <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp" />
+          <button id="saveBtn" type="button" disabled>保存图片</button>
+        </div>
+        <div class="status" id="status">等待粘贴图片。</div>
+      </section>
+    </div>
+
+    <section class="result">
+      <div class="row">
+        <button class="secondary" id="copyBtn" type="button" disabled>复制 Typst</button>
+        <a id="savedPath" href="#" target="_blank" rel="noreferrer" hidden>打开保存的图片</a>
+      </div>
+      <pre id="snippet">保存后这里会显示 Typst figure 代码。</pre>
+    </section>
+  </main>
+
+  <script>
+    const state = {
+      dataUrl: "",
+      mime: "",
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function setStatus(text, type = "") {
+      const el = $("status");
+      el.textContent = text;
+      el.className = `status ${type}`.trim();
+    }
+
+    function stemFromName(name) {
+      const raw = String(name || "pasted-image").replace(/\.[^.]+$/, "");
+      return raw
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "pasted-image";
+    }
+
+    function showImage(dataUrl, sourceName = "") {
+      state.dataUrl = dataUrl;
+      const zone = $("dropZone");
+      zone.classList.add("has-image");
+      zone.innerHTML = `<img src="${dataUrl}" alt="Pasted screenshot preview" />`;
+      $("saveBtn").disabled = false;
+
+      if (!$("nameInput").value.trim()) {
+        $("nameInput").value = stemFromName(sourceName);
+      }
+      setStatus("已读取图片，可以保存。", "ok");
+    }
+
+    function readFile(file) {
+      if (!file || !file.type.startsWith("image/")) {
+        setStatus("请选择图片文件。", "err");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => showImage(String(reader.result || ""), file.name);
+      reader.onerror = () => setStatus("读取图片失败。", "err");
+      reader.readAsDataURL(file);
+    }
+
+    document.addEventListener("paste", (event) => {
+      const items = Array.from(event.clipboardData?.items || []);
+      const imageItem = items.find((item) => item.type.startsWith("image/"));
+      if (!imageItem) {
+        setStatus("剪贴板里没有图片。", "err");
+        return;
+      }
+      const file = imageItem.getAsFile();
+      readFile(file);
+    });
+
+    $("fileInput").addEventListener("change", (event) => {
+      readFile(event.target.files?.[0]);
+    });
+
+    $("saveBtn").addEventListener("click", async () => {
+      if (!state.dataUrl) {
+        setStatus("请先粘贴或选择图片。", "err");
+        return;
+      }
+      $("saveBtn").disabled = true;
+      setStatus("正在保存...");
+      try {
+        const response = await fetch("/api/tools/thesis-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            image_data_url: state.dataUrl,
+            name: $("nameInput").value,
+            caption: $("captionInput").value,
+            overwrite: $("overwriteInput").checked,
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.detail || `HTTP ${response.status}`);
+        }
+
+        $("snippet").textContent = data.typst_snippet || "";
+        $("copyBtn").disabled = !data.typst_snippet;
+        $("savedPath").hidden = false;
+        $("savedPath").href = `/api/tools/thesis-image/${encodeURIComponent(data.file_name)}`;
+        $("savedPath").textContent = data.relative_path || data.file_name;
+        setStatus(`已保存：${data.relative_path}`, "ok");
+      } catch (error) {
+        setStatus(String(error.message || error), "err");
+      } finally {
+        $("saveBtn").disabled = false;
+      }
+    });
+
+    $("copyBtn").addEventListener("click", async () => {
+      await navigator.clipboard.writeText($("snippet").textContent);
+      setStatus("Typst 代码已复制。", "ok");
+    });
+
+    $("dropZone").focus();
+  </script>
+</body>
+</html>

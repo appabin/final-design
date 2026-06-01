@@ -253,8 +253,11 @@ class MilvusVectorStore:
         expr = f'doc_id == "{doc_id}"'
         try:
             self._client.delete(collection_name=self.collection, filter=expr)
-        except Exception:
+        except Exception as exc:
             self._fallback.delete_doc(doc_id)
+            raise RuntimeError(
+                f"Milvus delete failed for collection={self.collection}: {type(exc).__name__}: {exc}"
+            ) from exc
 
 
 class VectorStore:
